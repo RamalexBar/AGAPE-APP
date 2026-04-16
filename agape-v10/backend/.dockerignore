@@ -1,0 +1,16 @@
+node_modules
+pnpm-lock.yaml
+.env
+.git
+.gitignore
+Dockerfile
+.dockerignore
+tests
+docs
+*.md
+*.zip
+*.sql
+legal
+scripts
+/home/ubuntu/agape-backend/agape-monetize/{src
+/home/ubuntu/agape-backend/agape-monetize/{src/{controllers,routes,services,models,middlewares,config,socket,utils},scripts}
