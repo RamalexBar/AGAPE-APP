@@ -4,7 +4,7 @@
 // ================================================
 
 const DEV_URL    = 'http://localhost:3000';
-const PROD_URL   = 'https://api.agapeapp.co'; // ← cambia por tu URL de Railway/Render
+const PROD_URL   = 'https://agape-backend-7w4h.onrender.com';
 
 const __DEV__ = process.env.NODE_ENV !== 'production';
 
