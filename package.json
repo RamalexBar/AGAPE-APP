@@ -54,7 +54,6 @@
     "react-native-screens": "~3.29.0",
     "react-native-svg": "^14.1.0",
     "react-native-toast-message": "^2.2.0",
-    "react-native-webrtc": "^106.0.6",
     "socket.io-client": "^4.6.2",
     "zustand": "^4.5.2"
   },
