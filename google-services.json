@@ -1,0 +1,41 @@
+{
+  "_LEER_ANTES_DE_COMPILAR": {
+    "ESTADO": "PLACEHOLDER — reemplazar con el archivo real ANTES del build",
+    "PASOS": [
+      "1. Ve a https://console.firebase.google.com",
+      "2. Crea un proyecto o abre el existente",
+      "3. Agrega app Android con package name: com.agape.app",
+      "4. Descarga google-services.json",
+      "5. REEMPLAZA este archivo completo con el descargado",
+      "6. Para iOS: descarga GoogleService-Info.plist y ponlo en ios/Agape/ tras expo prebuild"
+    ],
+    "SIN_ESTE_ARCHIVO": "El build de Android falla — las notificaciones push NO funcionan"
+  },
+  "project_info": {
+    "project_number": "REEMPLAZAR",
+    "project_id": "REEMPLAZAR",
+    "storage_bucket": "REEMPLAZAR.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:REEMPLAZAR:android:REEMPLAZAR",
+        "android_client_info": {
+          "package_name": "com.agape.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "REEMPLAZAR"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
