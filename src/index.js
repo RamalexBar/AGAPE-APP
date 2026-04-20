@@ -22,6 +22,7 @@ const {
 const { trackActivity } = require('./middlewares/activity');
 
 const app    = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 // ── Seguridad & Middleware ──────────────────────────────────────────
