@@ -1,4 +1,5 @@
 node_modules/
+<<<<<<< HEAD
 .expo/
 .expo-shared/
 dist/
@@ -15,3 +16,13 @@ google-play-key.json
 .env
 .env.local
 .DS_Store
+=======
+.env
+.env.production
+.env.local
+*.log
+dist/
+coverage/
+.DS_Store
+pnpm-lock.yaml
+>>>>>>> 50779e87a2148ba0d6e4df2217f2dd411e39a26f

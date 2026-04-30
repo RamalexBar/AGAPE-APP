@@ -36,7 +36,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
-        "backgroundColor": "#0a0a14"
+        "backgroundColor": "#1C0A1A"
       },
       "package": "com.agape.app",
       "versionCode": 10,
