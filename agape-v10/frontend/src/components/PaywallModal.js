@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { COLORES } from '../utils/constants';
+import { openCheckout, detectCurrency } from '../services/paymentService';
 
 const { height } = Dimensions.get('window');
 
@@ -22,6 +23,7 @@ const ICONOS = {
 export default function PaywallModal({
   visible, tipo, mensaje, puede_ver_ad, compat,
   perfil, onVerAnuncio, onUpgrade, onCerrar,
+  userId, email,
 }) {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const fadeAnim  = useRef(new Animated.Value(0)).current;
@@ -45,6 +47,13 @@ export default function PaywallModal({
   const icono  = ICONOS[mensaje?.icono] || 'heart';
   const titulo = mensaje?.titulo || '✨ Función Premium';
   const sub    = mensaje?.subtitulo || 'Activa Premium para acceder a esta función';
+
+  const handleUpgrade = async () => {
+    if (userId && email) {
+      await openCheckout({ userId, email, plan: 'monthly' });
+    }
+    if (onUpgrade) onUpgrade();
+  };
 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={onCerrar}>
@@ -74,7 +83,7 @@ export default function PaywallModal({
           ) : null}
 
           {/* Botón principal */}
-          <TouchableOpacity onPress={onUpgrade} style={styles.btnPrimario} activeOpacity={0.88}>
+          <TouchableOpacity onPress={handleUpgrade} style={styles.btnPrimario} activeOpacity={0.88}>
             <LinearGradient colors={COLORES.gradPrimario} style={styles.btnPrimarioGrad}>
               <Ionicons name="star" size={18} color="#fff" />
               <Text style={styles.btnPrimarioTexto}>Ver con Premium</Text>
