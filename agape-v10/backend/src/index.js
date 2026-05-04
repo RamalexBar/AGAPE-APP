@@ -92,6 +92,8 @@ app.use('/api/legal',         require('./routes/legal'));
 app.use('/api/admin',         require('./routes/admin'));
 app.use('/api/interests',     require('./routes/interests'));
 app.use('/api/webhooks',      require('./routes/webhooks'));
+app.use('/api/lemonsqueezy',  require('./routes/lemonsqueezy'));
+app.use('/api/translate',     require('./routes/translator'));
 
 // Legales públicos (App Store exige URLs sin auth)
 app.get('/privacy', (req, res) => res.redirect(env.PRIVACY_POLICY_URL));
