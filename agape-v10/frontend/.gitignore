@@ -10,7 +10,7 @@ web-build/
 *.key
 *.mobileprovision
 *.orig.*
-google-services.json
+
 GoogleService-Info.plist
 google-play-key.json
 .env
