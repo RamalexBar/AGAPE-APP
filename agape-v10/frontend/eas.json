@@ -9,13 +9,13 @@
     },
     "preview": {
       "distribution": "internal",
-      "node": "20.12.0",
+      "node": "20.19.4",
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
-      "node": "20.12.0",
+      "node": "20.19.4",
       "android": {
         "buildType": "app-bundle"
       },
