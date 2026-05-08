@@ -9,11 +9,13 @@
     },
     "preview": {
       "distribution": "internal",
+      "node": "20.12.0",
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
+      "node": "20.12.0",
       "android": {
         "buildType": "app-bundle"
       },
@@ -29,7 +31,7 @@
         "track": "internal"
       },
       "ios": {
-        "appleId": "tu@email.com",
+        "appleId": "agapeconections@gmail.com",
         "ascAppId": "TU_APP_STORE_APP_ID",
         "appleTeamId": "TU_APPLE_TEAM_ID"
       }
