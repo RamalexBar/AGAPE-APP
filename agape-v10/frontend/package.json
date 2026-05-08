@@ -44,7 +44,7 @@
     "expo-secure-store": "~55.0.13",
     "expo-splash-screen": "~55.0.20",
     "expo-status-bar": "~55.0.6",
-    "react": "19.2.0",
+    "react": "^19.2.0",
     "react-native": "0.83.6",
     "react-native-deck-swiper": "^2.0.17",
     "react-native-gesture-handler": "~2.30.0",
