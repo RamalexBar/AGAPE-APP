@@ -31,5 +31,41 @@ router.delete('/token',
     } catch (e) { next(e); }
   }
 );
+// POST /api/notifications/send → enviar notificación push
+router.post('/send',
+  authenticateToken,
+  async (req, res, next) => {
+    try {
+      const { toUserId, title, body, data } = req.body;
 
+      // Obtener token del usuario destino
+      const { data: userData } = await require('../models/supabaseClient')
+        .from('push_tokens')
+        .select('token')
+        .eq('user_id', toUserId)
+        .single();
+
+      if (!userData?.token) {
+        return res.json({ success: false, message: 'Usuario sin token' });
+      }
+
+      // Enviar con Expo Push API
+      await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: userData.token,
+          title,
+          body,
+          data: data || {},
+          sound: 'default',
+        }),
+      });
+
+      res.json({ success: true });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
 module.exports = router;
