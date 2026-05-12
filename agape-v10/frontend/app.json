@@ -54,7 +54,7 @@
         "android.permission.VIBRATE"
       ],
       "googleServicesFile": "./google-services.json",
-      "googleMobileAdsAppId": "ca-app-pub-1150474313300582~6259510950"
+     
     },
     "plugins": [
       "expo-secure-store",

@@ -10,7 +10,7 @@ import Toast from 'react-native-toast-message';
 import AppNavigator from './src/navigation/AppNavigator';
 import { conectarSocket } from './src/services/socketService';
 import { initRevenueCat, identifyUser } from './src/services/revenueCatService';
-import mobileAds from 'react-native-google-mobile-ads';
+
 import useStore from './src/store/useStore';
 
 export default function App() {
@@ -18,7 +18,7 @@ export default function App() {
 
   useEffect(() => {
   initRevenueCat();
-  mobileAds().initialize();
+
 }, []);
 
   useEffect(() => {
