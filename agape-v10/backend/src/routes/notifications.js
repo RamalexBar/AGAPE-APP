@@ -39,7 +39,7 @@ router.post('/send',
       const { toUserId, title, body, data } = req.body;
 
       // Obtener token del usuario destino
-      const { data: userData } = await require('../models/supabaseClient')
+      const { data: userData } = await require('../config/supabase')
         .from('push_tokens')
         .select('token')
         .eq('user_id', toUserId)

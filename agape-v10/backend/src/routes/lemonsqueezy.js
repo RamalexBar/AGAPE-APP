@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const supabase = require('../models/supabaseClient');
+const supabase = require('../config/supabase');
 
 // ─────────────────────────────────────────
 // POST /api/lemonsqueezy/webhook
