@@ -1,82 +1,87 @@
 // ================================================
-// ÁGAPE v9 — Anuncio con AdMob RewardedAd Real
+// ÁGAPE v10 — Anuncio con AdMob RewardedAd Real
 // Google AdMob SDK — Anuncio remunerado por ver
 // ================================================
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Modal, Animated, Dimensions, ActivityIndicator
+  Modal, Animated, Dimensions, ActivityIndicator, Platform
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import {
+  RewardedAd, RewardedAdEventType, TestIds
+} from 'react-native-google-mobile-ads';
 
 const { width } = Dimensions.get('window');
 
 // ── AdMob Integration ──────────────────────────────────────────────
-// Para activar: npx expo install react-native-google-mobile-ads
-// Luego: npx expo prebuild --clean
-//
-// import {
-//   RewardedAd, RewardedAdEventType, TestIds
-// } from 'react-native-google-mobile-ads';
-//
-// const ADMOB_REWARDED_ID = __DEV__
-//   ? TestIds.REWARDED
-//   : Platform.OS === 'ios'
-//     ? 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX'  // ← Tu ID real de iOS
-//     : 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX'; // ← Tu ID real de Android
-//
-// const rewarded = RewardedAd.createForAdRequest(ADMOB_REWARDED_ID, {
-//   requestNonPersonalizedAdsOnly: true,
-// });
+// IMPORTANTE: Este ID es distinto al "android_app_id" del app.json.
+// El app.json necesita el App ID (formato ca-app-pub-XXXX~XXXX, con "~").
+// Aquí necesitas el Ad Unit ID del anuncio "Rewarded" específico
+// (formato ca-app-pub-XXXX/XXXX, con "/"), que se crea por separado
+// en la consola de AdMob → Anuncios → Crear unidad de anuncio → Recompensado.
+const ADMOB_REWARDED_ID = __DEV__
+  ? TestIds.REWARDED
+  : Platform.OS === 'ios'
+    ? 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX'  // ← TODO: tu Ad Unit ID real de iOS (pendiente, aún sin cuenta Apple)
+    : 'ca-app-pub-1150474313300582/4234467477'; // ← Ad Unit ID real de Android (Agape-Recompensado-Simple-Android)
+
+let rewarded = RewardedAd.createForAdRequest(ADMOB_REWARDED_ID, {
+  requestNonPersonalizedAdsOnly: true,
+});
 
 export default function AnuncioCard({ visible, onRecompensa, onCerrar, onVerPremium }) {
-  const [cargandoAd, setCargandoAd]   = useState(false);
-  const [adListo,    setAdListo]       = useState(false);
+  const [cargandoAd, setCargandoAd] = useState(false);
+  const [adListo, setAdListo] = useState(false);
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
-  const fadeAnim  = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
         Animated.spring(scaleAnim, { toValue: 1, tension: 70, friction: 10, useNativeDriver: true }),
-        Animated.timing(fadeAnim,  { toValue: 1, duration: 250, useNativeDriver: true }),
+        Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
       ]).start();
-      precargarAnuncio();
+      const cleanup = precargarAnuncio();
+      return cleanup;
     }
   }, [visible]);
 
   const precargarAnuncio = () => {
     setCargandoAd(true);
-    // ── Con AdMob real (descomentar): ─────────────────────────────
-    // const unsubscribeLoaded = rewarded.addAdEventListener(
-    //   RewardedAdEventType.LOADED, () => {
-    //     setCargandoAd(false); setAdListo(true);
-    //   }
-    // );
-    // const unsubscribeEarned = rewarded.addAdEventListener(
-    //   RewardedAdEventType.EARNED_REWARD, (reward) => {
-    //     // El usuario completó el anuncio → dar recompensa
-    //     onRecompensa?.();
-    //   }
-    // );
-    // rewarded.load();
-    // return () => { unsubscribeLoaded(); unsubscribeEarned(); };
-    //
-    // ── Modo desarrollo (simula carga de 1.5s): ──────────────────
-    setTimeout(() => { setCargandoAd(false); setAdListo(true); }, 1500);
+    setAdListo(false);
+
+    const unsubscribeLoaded = rewarded.addAdEventListener(
+      RewardedAdEventType.LOADED, () => {
+        setCargandoAd(false);
+        setAdListo(true);
+      }
+    );
+    const unsubscribeEarned = rewarded.addAdEventListener(
+      RewardedAdEventType.EARNED_REWARD, () => {
+        // El usuario completó el anuncio → dar recompensa
+        onRecompensa?.();
+      }
+    );
+
+    rewarded.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeEarned();
+    };
   };
 
   const verAnuncio = async () => {
     if (!adListo) return;
     setCargandoAd(true);
     try {
-      // ── Con AdMob real (descomentar): ─────────────────────────
-      // await rewarded.show();
-      //
-      // ── Modo desarrollo: simular anuncio de 3s ────────────────
-      await new Promise(r => setTimeout(r, 3000));
-      onRecompensa?.(); // ← Dar +6 swipes
+      await rewarded.show();
+      // Después de mostrarse, se prepara una nueva instancia para la próxima vez
+      rewarded = RewardedAd.createForAdRequest(ADMOB_REWARDED_ID, {
+        requestNonPersonalizedAdsOnly: true,
+      });
     } catch (e) {
       // Anuncio no disponible
       onCerrar?.();
@@ -148,7 +153,7 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: 'rgba(0,0,0,0.80)',
     alignItems: 'center', justifyContent: 'center', padding: 24,
   },
-  card:     { width: '100%', maxWidth: 360, borderRadius: 24, overflow: 'hidden' },
+  card: { width: '100%', maxWidth: 360, borderRadius: 24, overflow: 'hidden' },
   gradient: { padding: 32, alignItems: 'center' },
   iconWrap: {
     width: 80, height: 80, borderRadius: 40,
@@ -156,7 +161,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(201,168,76,0.25)',
     alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  titulo:    { fontSize: 20, fontWeight: '700', color: '#fff', textAlign: 'center', marginBottom: 10 },
+  titulo: { fontSize: 20, fontWeight: '700', color: '#fff', textAlign: 'center', marginBottom: 10 },
   subtitulo: { fontSize: 13, color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 20, marginBottom: 24 },
   loadingWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   loadingTxt: { fontSize: 13, color: 'rgba(255,255,255,0.5)' },
@@ -165,10 +170,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, borderRadius: 14, paddingVertical: 14,
   },
-  btnVerTxt:    { fontSize: 14, fontWeight: '700', color: '#fff' },
-  btnPremium:   { paddingVertical: 12, paddingHorizontal: 8 },
-  btnPremiumTxt:{ fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center' },
-  btnCerrar:    { paddingVertical: 10 },
+  btnVerTxt: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  btnPremium: { paddingVertical: 12, paddingHorizontal: 8 },
+  btnPremiumTxt: { fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center' },
+  btnCerrar: { paddingVertical: 10 },
   btnCerrarTxt: { fontSize: 12, color: 'rgba(255,255,255,0.28)' },
-  notaLegal:    { fontSize: 9, color: 'rgba(255,255,255,0.18)', textAlign: 'center', marginTop: 8 },
+  notaLegal: { fontSize: 9, color: 'rgba(255,255,255,0.18)', textAlign: 'center', marginTop: 8 },
 });
