@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 
-const API_KEY = 'test_BuaJyWlSUteECYDzhACkGqUtqxN';
+const API_KEY = 'goog_oulPJqFDfljPtoQCkWZzdnLKAtj';
 
 // ─────────────────────────────────────────
 // Inicializar RevenueCat
