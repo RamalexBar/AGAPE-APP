@@ -4,7 +4,7 @@ const fs      = require('fs');
 const path    = require('path');
 const supabase = require('../config/supabase');
 
-const LEGAL_DIR     = path.join(__dirname, '../../../legal');
+const LEGAL_DIR     = path.join(__dirname, '../../legal');
 const CURRENT_TERMS_VERSION   = '1.0';
 const CURRENT_PRIVACY_VERSION = '1.0';
 
