@@ -86,9 +86,10 @@ export default function RegisterScreen({ navigation }) {
     }
     if (!nombre.trim()) return 'Ingresa tu nombre.';
     if (!email.includes('@')) return 'Correo inválido.';
-    if (password.length < 6) return 'Contraseña mínimo 6 caracteres.';
+    if (password.length < 8) return 'Contraseña mínimo 8 caracteres.';
     if (!fechaNacimiento.match(/^\d{4}-\d{2}-\d{2}$/)) return 'Fecha formato AAAA-MM-DD.';
     if (!genero) return 'Selecciona tu género.';
+    if (!aceptoTerminos) return 'Debes aceptar los Términos y la Política de Privacidad.';
     return null;
   };
 
@@ -109,13 +110,16 @@ export default function RegisterScreen({ navigation }) {
     try {
       setCargando(true);
 
-      // Registrar usuario
+      const generoBackend = genero === 'hombre' ? 'M' : genero === 'mujer' ? 'F' : 'otro';
+
       const datos = {
         nombre: nombre.trim(),
         email: email.trim().toLowerCase(),
         password,
         fecha_nacimiento: fechaNacimiento,
-        genero,
+        genero: generoBackend,
+        accepted_terms: 'true',
+        accepted_privacy: 'true',
       };
       const respuesta = await register(datos);
 
@@ -137,7 +141,12 @@ export default function RegisterScreen({ navigation }) {
       });
 
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.error || 'Error al registrarse.');
+      const data = error.response?.data;
+      let mensaje = data?.error || 'Error al registrarse.';
+      if (data?.campos?.length > 0) {
+        mensaje += '\n\n' + data.campos.map(function(camp){ return '• ' + camp.campo + ': ' + camp.mensaje; }).join('\n');
+      }
+      Alert.alert('Error', mensaje);
     } finally {
       setCargando(false);
     }
@@ -151,7 +160,7 @@ export default function RegisterScreen({ navigation }) {
 
       <Campo icono="person-outline" placeholder="Tu nombre" value={nombre} onChange={setNombre} />
       <Campo icono="mail-outline" placeholder="Correo electrónico" value={email} onChange={setEmail} tipo="email-address" />
-      <Campo icono="lock-closed-outline" placeholder="Contraseña (mín. 6 caracteres)" value={password} onChange={setPassword} seguro />
+      <Campo icono="lock-closed-outline" placeholder="Contraseña (mín. 8 caracteres)" value={password} onChange={setPassword} seguro />
       <Campo icono="calendar-outline" placeholder="Fecha nacimiento (AAAA-MM-DD)" value={fechaNacimiento} onChange={setFechaNacimiento} />
 
       <Text style={styles.etiqueta}>Género</Text>
@@ -168,6 +177,13 @@ export default function RegisterScreen({ navigation }) {
           </TouchableOpacity>
         ))}
       </View>
+
+      <TouchableOpacity style={styles.filaTerminos} onPress={() => setAceptoTerminos(!aceptoTerminos)}>
+        <View style={[styles.checkbox, aceptoTerminos && styles.checkboxActivo]}>
+          {aceptoTerminos && <Ionicons name="checkmark" size={14} color="#fff" />}
+        </View>
+        <Text style={styles.textoTerminos}>Acepto los Términos de Servicio y la Política de Privacidad</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -371,6 +387,10 @@ const styles = StyleSheet.create({
   btnOpcionActivo: { borderColor: '#C44DFF', backgroundColor: 'rgba(196,77,255,0.2)' },
   txtOpcion: { color: 'rgba(255,255,255,0.6)', fontSize: 13 },
   txtOpcionActivo: { color: '#C44DFF', fontWeight: '600' },
+  filaTerminos: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
+  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)', justifyContent: 'center', alignItems: 'center' },
+  checkboxActivo: { backgroundColor: '#C44DFF', borderColor: '#C44DFF' },
+  textoTerminos: { color: 'rgba(255,255,255,0.6)', fontSize: 12, flex: 1 },
   gridFotos: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   celdaFoto: { width: '31%', aspectRatio: 3 / 4, borderRadius: 12, overflow: 'hidden' },
   foto: { width: '100%', height: '100%' },
