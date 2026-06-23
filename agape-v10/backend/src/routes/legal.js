@@ -23,6 +23,43 @@ router.get('/terms', (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// GET /api/legal/delete-account  → Página pública de solicitud de eliminación de cuenta
+router.get('/delete-account', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eliminar cuenta — Ágape</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #0a0a14; color: #fff; }
+    h1 { color: #C9A84C; }
+    p { line-height: 1.6; color: rgba(255,255,255,0.8); }
+    .card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin: 20px 0; }
+    a { color: #C9A84C; }
+    .warning { color: #ff6b6b; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>✝️ Ágape — Eliminar cuenta</h1>
+  <div class="card">
+    <p>Para solicitar la eliminación de tu cuenta y todos tus datos personales de Ágape, puedes hacerlo de dos formas:</p>
+    <h3>Opción 1 — Desde la app (recomendado)</h3>
+    <p>Abre la app → ve a <strong>Perfil → Configuración → Eliminar cuenta</strong>. La eliminación es inmediata.</p>
+    <h3>Opción 2 — Por correo electrónico</h3>
+    <p>Envía un correo a <a href="mailto:agapeconections@gmail.com">agapeconections@gmail.com</a> con el asunto <strong>"Solicitud de eliminación de cuenta"</strong> e incluye el correo asociado a tu cuenta.</p>
+    <p>Procesaremos tu solicitud en un plazo máximo de <strong>30 días</strong>.</p>
+  </div>
+  <div class="card">
+    <p class="warning">⚠️ La eliminación de tu cuenta es permanente e irreversible.</p>
+    <p>Se borrarán: tu perfil, fotos, mensajes, matches y todos los datos asociados a tu cuenta.</p>
+  </div>
+  <p>Para más información consulta nuestra <a href="/api/legal/privacy">Política de Privacidad</a>.</p>
+</body>
+</html>`);
+});
+
 // GET /api/legal/versions  → Versiones actuales (para que el frontend compare)
 router.get('/versions', (req, res) => {
   res.json({
