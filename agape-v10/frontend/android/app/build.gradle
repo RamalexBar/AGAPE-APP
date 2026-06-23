@@ -89,7 +89,7 @@ android {
 
     namespace 'com.agape.app'
     defaultConfig {
-        applicationId 'com.agape.app'
+        applicationId 'com.agapeapp.dating'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 10
