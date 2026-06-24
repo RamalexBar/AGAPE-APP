@@ -87,7 +87,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.agape.app'
+    namespace 'com.agapeapp.dating'
     defaultConfig {
         applicationId 'com.agapeapp.dating'
         minSdkVersion rootProject.ext.minSdkVersion

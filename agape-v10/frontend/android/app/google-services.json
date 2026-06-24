@@ -23,25 +23,6 @@
           "other_platform_oauth_client": []
         }
       }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:99447203096:android:c75ceeaf355d53441f2a6d",
-        "android_client_info": {
-          "package_name": "com.agapeapp.dating"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBOYO7ckCCvi9BO4CcpRvt_vXCjAjPS670"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
     }
   ],
   "configuration_version": "1"
