@@ -1,4 +1,4 @@
-package com.agape.app
+package com.agapeapp.dating
 
 import android.app.Application
 import android.content.res.Configuration

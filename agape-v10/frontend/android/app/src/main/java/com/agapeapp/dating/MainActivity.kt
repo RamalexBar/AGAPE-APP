@@ -1,4 +1,4 @@
-package com.agape.app
+package com.agapeapp.dating
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
