@@ -95,4 +95,46 @@ router.get('/status', authenticateToken, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+
+// GET /api/legal/child-safety
+router.get('/child-safety', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seguridad Infantil - Agape</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #0a0a14; color: #fff; }
+    h1 { color: #C9A84C; }
+    h2 { color: #C9A84C; font-size: 18px; margin-top: 30px; }
+    p { line-height: 1.6; color: rgba(255,255,255,0.8); }
+    .card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin: 20px 0; }
+    a { color: #C9A84C; }
+  </style>
+</head>
+<body>
+  <h1>Agape - Estandares de Seguridad Infantil</h1>
+  <p>Agape es una app de citas para adultos mayores de 18 anos. Nos comprometemos con la proteccion de menores.</p>
+  <div class="card">
+    <h2>Prohibiciones absolutas</h2>
+    <p>Agape prohibe estrictamente cualquier contenido que explote, abuse o ponga en peligro a menores, incluyendo material de abuso sexual infantil (CSAM).</p>
+  </div>
+  <div class="card">
+    <h2>Verificacion de edad</h2>
+    <p>Todos los usuarios deben proporcionar su fecha de nacimiento. Los menores de 18 anos no pueden crear cuenta ni acceder a la plataforma.</p>
+  </div>
+  <div class="card">
+    <h2>Mecanismos de denuncia</h2>
+    <p>Los usuarios pueden denunciar contenido inapropiado desde la app. Para denunciar un problema de seguridad infantil: <a href="mailto:agapeconections@gmail.com">agapeconections@gmail.com</a></p>
+  </div>
+  <div class="card">
+    <h2>Cumplimiento legal</h2>
+    <p>Agape cumple con todas las leyes de proteccion infantil y reporta casos de CSAM a las autoridades competentes incluyendo NCMEC cuando corresponda.</p>
+  </div>
+</body>
+</html>`);
+});
+
 module.exports = router;
