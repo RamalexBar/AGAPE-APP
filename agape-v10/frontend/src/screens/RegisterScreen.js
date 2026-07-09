@@ -141,11 +141,17 @@ export default function RegisterScreen({ navigation }) {
       });
 
     } catch (error) {
-      const data = error.response?.data;
-      let mensaje = data?.error || 'Error al registrarse.';
-      if (data?.campos?.length > 0) {
-        mensaje += '\n\n' + data.campos.map(function(camp){ return '• ' + camp.campo + ': ' + camp.mensaje; }).join('\n');
-      }
+      let mensaje = 'Error al registrarse.';
+      try {
+        const d = error?.response?.data;
+        if (d && typeof d === 'object') {
+          if (typeof d.error === 'string') mensaje = d.error;
+          else if (typeof d.message === 'string') mensaje = d.message;
+          else mensaje = JSON.stringify(d);
+        } else if (typeof error?.message === 'string') {
+          mensaje = error.message;
+        }
+      } catch(e) { mensaje = 'Error desconocido'; }
       Alert.alert('Error', mensaje);
     } finally {
       setCargando(false);
