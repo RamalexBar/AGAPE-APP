@@ -70,10 +70,10 @@ const register = async ({ nombre, email, password, genero, fecha_nacimiento, ref
   }
 
   try {
-    await supabase.from('spiritual_profiles').insert({ user_id: user.id, total_xp: 0, nivel: 1, racha_devocional: 0, monedas_fe: 100 });
+    try { await supabase.from('spiritual_profiles').insert({ user_id: user.id, total_xp: 0, nivel: 1, racha_devocional: 0, monedas_fe: 100 }); } catch(e) { logger.warn({ e }, 'Error creando spiritual_profile'); }
   } catch(e) { logger.warn({ e }, 'Error creando spiritual_profile'); }
   try {
-    await supabase.from('profiles').insert({ user_id: user.id, fotos: [], intereses: [] });
+    try { await supabase.from('profiles').insert({ user_id: user.id, fotos: [], intereses: [] }); } catch(e) { logger.warn({ e }, 'Error creando profile'); }
   } catch(e) { logger.warn({ e }, 'Error creando profile'); }
 
   // Aplicar código de referido si existe
@@ -178,3 +178,4 @@ const changePassword = async (userId, { currentPassword, newPassword }) => {
 };
 
 module.exports = { register, login, refreshToken, changePassword };
+
