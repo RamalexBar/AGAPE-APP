@@ -69,8 +69,12 @@ const register = async ({ nombre, email, password, genero, fecha_nacimiento, ref
     throw new Error('Error al crear usuario.');
   }
 
-  await supabase.from('spiritual_profiles').insert({ user_id: user.id, total_xp: 0, nivel: 1, racha_devocional: 0, monedas_fe: 100 });
-  await supabase.from('profiles').insert({ user_id: user.id, fotos: [], intereses: [] });
+  try {
+    await supabase.from('spiritual_profiles').insert({ user_id: user.id, total_xp: 0, nivel: 1, racha_devocional: 0, monedas_fe: 100 });
+  } catch(e) { logger.warn({ e }, 'Error creando spiritual_profile'); }
+  try {
+    await supabase.from('profiles').insert({ user_id: user.id, fotos: [], intereses: [] });
+  } catch(e) { logger.warn({ e }, 'Error creando profile'); }
 
   // Aplicar código de referido si existe
   let referralResult = null;
