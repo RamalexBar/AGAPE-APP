@@ -128,8 +128,6 @@ router.post('/google',
             is_active: true,
             is_verified: true,
             is_banned: false,
-            accepted_terms: true,
-            accepted_terms_at: new Date().toISOString(),
             last_active_at: new Date().toISOString(),
             created_at: new Date().toISOString()
           })
@@ -150,3 +148,4 @@ router.post('/google',
 );
 
 module.exports = router;
+

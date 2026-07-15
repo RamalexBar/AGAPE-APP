@@ -16,7 +16,7 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.agape.app",
+      "bundleIdentifier": "com.agapeapp.dating",
       "buildNumber": "10",
       "infoPlist": {
         "NSCameraUsageDescription": "Ágape necesita acceso a la cámara para tomar fotos de perfil.",
@@ -41,7 +41,7 @@
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#0a0a14"
       },
-      "package": "com.agape.app",
+      "package": "com.agapeapp.dating",
       "versionCode": 10,
       "permissions": [
         "android.permission.CAMERA",

@@ -56,9 +56,7 @@ const register = async ({ nombre, email, password, genero, fecha_nacimiento, ref
       fecha_nacimiento, 
       is_active: true, 
       is_verified: false, 
-      is_banned: false, 
-      accepted_terms: true,
-      accepted_terms_at: new Date().toISOString(),
+      is_banned: false,
       last_active_at: new Date().toISOString(), 
       created_at: new Date().toISOString() 
     })
@@ -178,4 +176,5 @@ const changePassword = async (userId, { currentPassword, newPassword }) => {
 };
 
 module.exports = { register, login, refreshToken, changePassword };
+
 
