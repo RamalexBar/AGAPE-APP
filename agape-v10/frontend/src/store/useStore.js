@@ -36,25 +36,25 @@ const useStore = create((set, get) => ({
   loginConGoogle: async (email, nombre, googleId) => {
     try {
       const { data } = await authAPI.loginConGoogle({ email, nombre, google_id: googleId });
-      get().setUser(data.user);
-      await SecureStore.setItemAsync('accessToken', data.accessToken);
-      await SecureStore.setItemAsync('refreshToken', data.refreshToken);
+      await SecureStore.setItemAsync('agape_token', data.accessToken);
+      set({ user: data.user, token: data.accessToken, isAuthenticated: true });
+      get().verificarLikes();
     } catch (error) {
       throw error;
     }
   },
   login: async (email, password) => {
     const { data } = await authAPI.login(email, password);
-    await SecureStore.setItemAsync('agape_token', data.token);
-    set({ user: data.user, token: data.token, isAuthenticated: true });
+    await SecureStore.setItemAsync('agape_token', data.accessToken);
+    set({ user: data.user, token: data.accessToken, isAuthenticated: true });
     get().verificarLikes();
     return data;
   },
 
   register: async (datos) => {
     const { data } = await authAPI.register(datos);
-    await SecureStore.setItemAsync('agape_token', data.token);
-    set({ user: data.user, token: data.token, isAuthenticated: true });
+    await SecureStore.setItemAsync('agape_token', data.accessToken);
+    set({ user: data.user, token: data.accessToken, isAuthenticated: true });
     return data;
   },
 
@@ -158,3 +158,5 @@ const useStore = create((set, get) => ({
 }));
 
 export default useStore;
+
+
