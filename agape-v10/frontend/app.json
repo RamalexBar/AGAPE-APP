@@ -69,7 +69,9 @@
             "newArchEnabled": false,
             "compileSdkVersion": 36,
             "targetSdkVersion": 36,
-            "buildToolsVersion": "35.0.0"
+            "buildToolsVersion": "35.0.0",
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
           }
         }
       ],
@@ -89,3 +91,4 @@
     "owner": "ramalex"
   }
 }
+
