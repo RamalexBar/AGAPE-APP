@@ -40,6 +40,7 @@ export const authAPI = {
     ...datos, accepted_terms: 'true', accepted_privacy: 'true',
   }),
   login:          (email, password)    => api.post('/api/auth/login', { email, password }),
+  loginConGoogle: (datos)              => api.post('/api/auth/google', datos),
   getMe:          ()                   => api.get('/api/auth/me'),
   logout:         ()                   => api.post('/api/auth/logout'),
   forgotPassword: (email)              => api.post('/api/auth/forgot-password', { email }),
@@ -154,3 +155,4 @@ export const spiritualAPI = {
 };
 
 export default api;
+

@@ -35,7 +35,7 @@ export default function RegisterScreen({ navigation }) {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fechaNacimiento, setFechaNacimiento] = useState('');
+  const [esMayor18, setEsMayor18] = useState(false);
   const [genero, setGenero] = useState('');
 
   // Paso 2: Fotos e intereses
@@ -75,21 +75,13 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  const validarPaso1 = () => {
-    // Validar edad ≥ 18
-    if (fechaNacimiento.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      const birth   = new Date(fechaNacimiento);
-      const hoy     = new Date();
-      const difAnios = (hoy - birth) / (1000 * 60 * 60 * 24 * 365.25);
-      if (difAnios < 18) return 'Debes tener al menos 18 años para usar Ágape.';
-      if (difAnios > 120) return 'Fecha de nacimiento inválida.';
-    }
+const validarPaso1 = () => {
     if (!nombre.trim()) return 'Ingresa tu nombre.';
-    if (!email.includes('@')) return 'Correo inválido.';
-    if (password.length < 8) return 'Contraseña mínimo 8 caracteres.';
-    if (!fechaNacimiento.match(/^\d{4}-\d{2}-\d{2}$/)) return 'Fecha formato AAAA-MM-DD.';
-    if (!genero) return 'Selecciona tu género.';
-    if (!aceptoTerminos) return 'Debes aceptar los Términos y la Política de Privacidad.';
+    if (!email.includes('@')) return 'Correo invalido.';
+    if (password.length < 8) return 'Contrasena minimo 8 caracteres.';
+    if (!genero) return 'Selecciona tu genero.';
+    if (!esMayor18) return 'Debes confirmar que eres mayor de 18 anos.';
+    if (!aceptoTerminos) return 'Debes aceptar los Terminos y la Politica de Privacidad.';
     return null;
   };
 
@@ -116,7 +108,7 @@ export default function RegisterScreen({ navigation }) {
         nombre: nombre.trim(),
         email: email.trim().toLowerCase(),
         password,
-        fecha_nacimiento: fechaNacimiento,
+        fecha_nacimiento: '2000-01-01',
         genero: generoBackend,
         accepted_terms: 'true',
         accepted_privacy: 'true',
@@ -167,7 +159,12 @@ export default function RegisterScreen({ navigation }) {
       <Campo icono="person-outline" placeholder="Tu nombre" value={nombre} onChange={setNombre} />
       <Campo icono="mail-outline" placeholder="Correo electrónico" value={email} onChange={setEmail} tipo="email-address" />
       <Campo icono="lock-closed-outline" placeholder="Contraseña (mín. 8 caracteres)" value={password} onChange={setPassword} seguro />
-      <Campo icono="calendar-outline" placeholder="Fecha nacimiento (AAAA-MM-DD)" value={fechaNacimiento} onChange={setFechaNacimiento} />
+      <TouchableOpacity style={styles.filaTerminos} onPress={() => setEsMayor18(!esMayor18)}>
+        <View style={[styles.checkbox, esMayor18 && styles.checkboxActivo]}>
+          {esMayor18 && <Ionicons name="checkmark" size={14} color="#fff" />}
+        </View>
+        <Text style={styles.textoTerminos}>Confirmo que soy mayor de 18 años</Text>
+      </TouchableOpacity>
 
       <Text style={styles.etiqueta}>Género</Text>
       <View style={styles.filaBotones}>
@@ -432,3 +429,4 @@ const styles = StyleSheet.create({
   btnSiguienteTexto: { color: '#fff', fontSize: 16, fontWeight: '600' },
   yaTenga: { textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 14 },
 });
+

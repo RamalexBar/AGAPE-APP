@@ -33,6 +33,16 @@ const useStore = create((set, get) => ({
     }
   },
 
+  loginConGoogle: async (email, nombre, googleId) => {
+    try {
+      const { data } = await authAPI.loginConGoogle({ email, nombre, google_id: googleId });
+      get().setUser(data.user);
+      await SecureStore.setItemAsync('accessToken', data.accessToken);
+      await SecureStore.setItemAsync('refreshToken', data.refreshToken);
+    } catch (error) {
+      throw error;
+    }
+  },
   login: async (email, password) => {
     const { data } = await authAPI.login(email, password);
     await SecureStore.setItemAsync('agape_token', data.token);

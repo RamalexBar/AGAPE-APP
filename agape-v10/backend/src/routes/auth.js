@@ -96,4 +96,57 @@ router.get('/me', authenticateToken, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// POST /api/auth/google
+router.post('/google',
+  body('email').isEmail().normalizeEmail(),
+  body('nombre').trim().notEmpty(),
+  body('google_id').notEmpty(),
+  validate,
+  async (req, res, next) => {
+    try {
+      const { email, nombre, google_id } = req.body;
+      const supabase = require('../config/supabase');
+      const { generateTokens } = require('../middlewares/auth');
+
+      // Buscar usuario existente
+      let { data: user } = await supabase
+        .from('users')
+        .select('id, nombre, email, genero, is_verified')
+        .eq('email', email)
+        .single();
+
+      // Si no existe, crearlo
+      if (!user) {
+        const { data: newUser, error } = await supabase
+          .from('users')
+          .insert({
+            nombre,
+            email,
+            password_hash: 'GOOGLE_AUTH_' + google_id,
+            genero: 'otro',
+            fecha_nacimiento: '2000-01-01',
+            is_active: true,
+            is_verified: true,
+            is_banned: false,
+            accepted_terms: true,
+            accepted_terms_at: new Date().toISOString(),
+            last_active_at: new Date().toISOString(),
+            created_at: new Date().toISOString()
+          })
+          .select('id, nombre, email, genero, is_verified')
+          .single();
+
+        if (error) throw new Error('Error al crear usuario con Google.');
+        user = newUser;
+
+        try { await supabase.from('profiles').insert({ user_id: user.id, fotos: [], intereses: [] }); } catch(e) {}
+        try { await supabase.from('spiritual_profiles').insert({ user_id: user.id, total_xp: 0, nivel: 1, racha_devocional: 0, monedas_fe: 100 }); } catch(e) {}
+      }
+
+      const tokens = generateTokens(user);
+      res.json({ user, ...tokens });
+    } catch (e) { next(e); }
+  }
+);
+
 module.exports = router;

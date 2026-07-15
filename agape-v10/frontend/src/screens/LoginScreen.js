@@ -13,6 +13,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient as LG, Stop, Path, Rect } from 'react-native-svg';
 import useStore from '../store/useStore';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+
+WebBrowser.maybeCompleteAuthSession();
 import { COLORES } from '../utils/constants';
 import { esEmailValido } from '../utils/helpers';
 
@@ -55,6 +59,31 @@ export default function LoginScreen({ navigation }) {
   const [cargando, setCargando] = useState(false);
   const { login } = useStore();
   const insets = useSafeAreaInsets();
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: '10624564655-l50psci368qio5cvlk19tiook04mkerq.apps.googleusercontent.com',
+  });
+
+  React.useEffect(() => {
+    if (response?.type === 'success') {
+      const { authentication } = response;
+      handleGoogleLogin(authentication.accessToken);
+    }
+  }, [response]);
+
+  const handleGoogleLogin = async (accessToken) => {
+    try {
+      setCargando(true);
+      const userInfoResponse = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+        headers: { Authorization: 'Bearer ' + accessToken },
+      });
+      const userInfo = await userInfoResponse.json();
+      await loginConGoogle(userInfo.email, userInfo.name, userInfo.id);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo iniciar sesion con Google.');
+    } finally {
+      setCargando(false);
+    }
+  };
 
   const handleLogin = async () => {
     const emailTrimmed = email.trim().toLowerCase();
@@ -166,6 +195,16 @@ export default function LoginScreen({ navigation }) {
               <View style={styles.dividerLinea} />
             </View>
 
+            {/* Google Login */}
+            <TouchableOpacity
+              style={styles.btnGoogle}
+              onPress={() => promptAsync()}
+              disabled={!request || cargando}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="logo-google" size={20} color="#fff" />
+              <Text style={styles.btnGoogleTexto}>Continuar con Google</Text>
+            </TouchableOpacity>
             {/* Registro */}
             <TouchableOpacity
               style={styles.btnRegistro}
@@ -210,9 +249,13 @@ const styles = StyleSheet.create({
   divider:         { flexDirection: 'row', alignItems: 'center', gap: 12 },
   dividerLinea:    { flex: 1, height: 0.5, backgroundColor: COLORES.borde },
   dividerTexto:    { color: COLORES.muted, fontSize: 13 },
+  btnGoogle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, height: 52, borderRadius: 14, backgroundColor: '#4285F4', marginBottom: 12 },
+  btnGoogleTexto: { color: '#fff', fontWeight: '600', fontSize: 15 },
   btnRegistro:     { borderRadius: 14, height: 50, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: COLORES.borde },
   btnRegistroTexto:{ color: 'rgba(255,255,255,0.75)', fontWeight: '600', fontSize: 15 },
   legal:           { marginTop: 24, alignItems: 'center' },
   legalTexto:      { color: COLORES.muted, fontSize: 11, textAlign: 'center', lineHeight: 17 },
   legalLink:       { color: COLORES.secundario, fontWeight: '600' },
 });
+
+
