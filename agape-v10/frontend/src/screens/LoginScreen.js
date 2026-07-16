@@ -1,6 +1,6 @@
-Ôªø// ================================================
-// √ÅGAPE v10 ‚Äî Login Screen (Producci√≥n)
-// Dise√±o profesional, validaciones mejoradas
+// ================================================
+// ¡GAPE v10 ó Login Screen (ProducciÛn)
+// DiseÒo profesional, validaciones mejoradas
 // ================================================
 import React, { useState } from 'react';
 import {
@@ -88,11 +88,11 @@ export default function LoginScreen({ navigation }) {
   const handleLogin = async () => {
     const emailTrimmed = email.trim().toLowerCase();
     if (!emailTrimmed || !password) {
-      Alert.alert('Campos requeridos', 'Ingresa tu correo y contrase√±a.');
+      Alert.alert('Campos requeridos', 'Ingresa tu correo y contraseÒa.');
       return;
     }
     if (!esEmailValido(emailTrimmed)) {
-      Alert.alert('Correo inv√°lido', 'Verifica el formato de tu correo.');
+      Alert.alert('Correo inv·lido', 'Verifica el formato de tu correo.');
       return;
     }
     try {
@@ -100,7 +100,7 @@ export default function LoginScreen({ navigation }) {
       await login(emailTrimmed, password);
     } catch (error) {
       const msg = error.response?.data?.error?.message
-        || 'Error al iniciar sesi√≥n. Verifica tus datos.';
+        || 'Error al iniciar sesiÛn. Verifica tus datos.';
       Alert.alert('Error', msg);
     } finally {
       setCargando(false);
@@ -118,14 +118,14 @@ export default function LoginScreen({ navigation }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ‚îÄ‚îÄ Logo ‚îÄ‚îÄ */}
+          {/* -- Logo -- */}
           <View style={styles.logoContenedor}>
             <AgapeLogo size={92} />
-            <Text style={styles.logoTexto}>√ÅGAPE</Text>
-            <Text style={styles.logoSubtitulo}>Conexiones con prop√≥sito y fe</Text>
+            <Text style={styles.logoTexto}>¡GAPE</Text>
+            <Text style={styles.logoSubtitulo}>Conexiones con propÛsito y fe</Text>
           </View>
 
-          {/* ‚îÄ‚îÄ Formulario ‚îÄ‚îÄ */}
+          {/* -- Formulario -- */}
           <View style={styles.card}>
             <Text style={styles.titulo}>Bienvenido de vuelta</Text>
 
@@ -134,7 +134,7 @@ export default function LoginScreen({ navigation }) {
               <Ionicons name="mail-outline" size={18} color={COLORES.muted} style={styles.campoIco} />
               <TextInput
                 style={styles.campoInput}
-                placeholder="Correo electr√≥nico"
+                placeholder="Correo electrÛnico"
                 placeholderTextColor={COLORES.muted}
                 value={email}
                 onChangeText={setEmail}
@@ -145,12 +145,12 @@ export default function LoginScreen({ navigation }) {
               />
             </View>
 
-            {/* Contrase√±a */}
+            {/* ContraseÒa */}
             <View style={styles.campo}>
               <Ionicons name="lock-closed-outline" size={18} color={COLORES.muted} style={styles.campoIco} />
               <TextInput
                 style={[styles.campoInput, { flex: 1 }]}
-                placeholder="Contrase√±a"
+                placeholder="ContraseÒa"
                 placeholderTextColor={COLORES.muted}
                 value={password}
                 onChangeText={setPassword}
@@ -165,15 +165,15 @@ export default function LoginScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            {/* Olvid√© contrase√±a */}
+            {/* OlvidÈ contraseÒa */}
             <TouchableOpacity
-              onPress={() => navigation.navigate('Legal')}
+              onPress={() => navigation.navigate('OlvideContrasena')}
               style={styles.olvidaste}
             >
-              <Text style={styles.olvidasteTexto}>¬øOlvidaste tu contrase√±a?</Text>
+              <Text style={styles.olvidasteTexto}>øOlvidaste tu contraseÒa?</Text>
             </TouchableOpacity>
 
-            {/* Bot√≥n login */}
+            {/* BotÛn login */}
             <TouchableOpacity onPress={handleLogin} disabled={cargando} activeOpacity={0.88}>
               <LinearGradient
                 colors={COLORES.gradPrimario}
@@ -182,7 +182,7 @@ export default function LoginScreen({ navigation }) {
               >
                 {cargando
                   ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.btnLoginTexto}>Iniciar sesi√≥n</Text>
+                  : <Text style={styles.btnLoginTexto}>Iniciar sesiÛn</Text>
                 }
               </LinearGradient>
             </TouchableOpacity>
@@ -218,7 +218,7 @@ export default function LoginScreen({ navigation }) {
           <TouchableOpacity onPress={() => navigation.navigate('Legal')} style={styles.legal}>
             <Text style={styles.legalTexto}>
               Al continuar aceptas nuestros{' '}
-              <Text style={styles.legalLink}>T√©rminos</Text>
+              <Text style={styles.legalLink}>TÈrminos</Text>
               {' '}y{' '}
               <Text style={styles.legalLink}>Privacidad</Text>
             </Text>
@@ -256,6 +256,7 @@ const styles = StyleSheet.create({
   legalTexto:      { color: COLORES.muted, fontSize: 11, textAlign: 'center', lineHeight: 17 },
   legalLink:       { color: COLORES.secundario, fontWeight: '600' },
 });
+
 
 
 

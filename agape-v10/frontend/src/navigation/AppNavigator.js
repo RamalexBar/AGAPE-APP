@@ -15,6 +15,7 @@ import { COLORES } from '../utils/constants';
 // Auth
 import LoginScreen    from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 
 // Tabs principales
 import HomeScreen    from '../screens/HomeScreen';
@@ -111,6 +112,7 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="Login"    component={LoginScreen} />
             <Stack.Screen name="Registro" component={RegisterScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="OlvideContrasena" component={ForgotPasswordScreen} options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="Legal"    component={LegalScreen} />
           </>
         ) : (
@@ -132,3 +134,4 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
+
