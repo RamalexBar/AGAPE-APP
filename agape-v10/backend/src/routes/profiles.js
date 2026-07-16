@@ -1,4 +1,4 @@
-// src/routes/profiles.js
+﻿// src/routes/profiles.js
 const router = require('express').Router();
 const { body } = require('express-validator');
 const { validate } = require('../middlewares/validate');
@@ -115,16 +115,22 @@ router.post('/me/invisible', authenticateToken, async (req, res, next) => {
 // GET /api/profiles/active
 router.get('/active', authenticateToken, async (req, res, next) => {
   try {
-    const radius = parseInt(req.query.radius) || 30;
-    const hace = new Date(Date.now() - 30 * 60 * 1000).toISOString(); // activos en últimos 30 min
+    const hace = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { data, error } = await require('../config/supabase')
-      .from('profiles')
-      .select('user_id, nombre, fotos, ciudad, ultima_actividad')
-      .gt('ultima_actividad', hace)
-      .neq('user_id', req.user.id)
+      .from('users')
+      .select('id, nombre, ubicacion_ciudad, last_active_at, profiles(fotos)')
+      .gt('last_active_at', hace)
+      .neq('id', req.user.id)
       .limit(50);
     if (error) throw error;
-    res.json({ perfiles: data || [], total: data?.length || 0 });
+    const perfiles = (data || []).map(u => ({
+      user_id: u.id,
+      nombre: u.nombre,
+      ciudad: u.ubicacion_ciudad,
+      ultima_actividad: u.last_active_at,
+      fotos: u.profiles?.fotos || [],
+    }));
+    res.json({ perfiles, total: perfiles.length });
   } catch (e) { next(e); }
 });
 
@@ -133,10 +139,10 @@ router.get('/active/count', authenticateToken, async (req, res, next) => {
   try {
     const hace = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { count, error } = await require('../config/supabase')
-      .from('profiles')
-      .select('user_id', { count: 'exact', head: true })
-      .gt('ultima_actividad', hace)
-      .neq('user_id', req.user.id);
+      .from('users')
+      .select('id', { count: 'exact', head: true })
+      .gt('last_active_at', hace)
+      .neq('id', req.user.id);
     if (error) throw error;
     res.json({ total_activos: count || 0 });
   } catch (e) { next(e); }
