@@ -30,7 +30,8 @@ const authenticateToken = async (req, res, next) => {
       return next(err);
     }
 
-    req.user = { id: payload.sub, email: payload.email, role: payload.role || 'user' };
+  req.user = { id: payload.sub, email: payload.email, role: payload.role || 'user' };
+    require('../services/presenceService').actualizarActividad(req.user.id).catch(() => {});
     next();
   } catch (err) {
     logger.debug(`[AUTH] Error verificando token: ${err.message}`);

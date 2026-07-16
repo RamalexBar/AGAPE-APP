@@ -73,8 +73,8 @@ const calcularCompatibilidad = (A, B) => {
 
 const obtenerFeedCristiano = async (userId, opciones = {}) => {
   const {
-    limite=20, filtro_nivel_min=null, filtro_nivel_max=null,
-    filtro_proposito=null, filtro_denominacion=null, solo_activos=true,
+ limite=20, filtro_nivel_min=null, filtro_nivel_max=null,
+    filtro_proposito=null, filtro_denominacion=null,
   } = opciones;
 
   const { data: yo } = await supabase
@@ -89,10 +89,8 @@ const obtenerFeedCristiano = async (userId, opciones = {}) => {
     supabase.from('swipes').select('to_user_id').eq('from_user_id', userId),
     supabase.from('blocked_users').select('blocked_id').eq('blocker_id', userId),
   ]);
-
-  const excluir = new Set([userId, ...(yaVistos||[]).map(s=>s.to_user_id), ...(bloqueados||[]).map(b=>b.blocked_id)]);
+const excluir = new Set([userId, ...(yaVistos||[]).map(s=>s.to_user_id), ...(bloqueados||[]).map(b=>b.blocked_id)]);
   const excStr = [...excluir].join(',') || "'00000000-0000-0000-0000-000000000000'";
-  const corte = solo_activos ? new Date(Date.now()-72*3600000).toISOString() : null;
 
   let q = supabase
     .from('users')
@@ -100,7 +98,6 @@ const obtenerFeedCristiano = async (userId, opciones = {}) => {
     .eq('is_active', true).eq('is_banned', false)
     .not('id', 'in', `(${excStr})`);
 
-  if (corte) q = q.gte('last_active_at', corte);
   if (filtro_nivel_min) q = q.gte('nivel', filtro_nivel_min);
   if (filtro_nivel_max) q = q.lte('nivel', filtro_nivel_max);
   if (filtro_proposito) q = q.eq('connection_purpose', filtro_proposito);
