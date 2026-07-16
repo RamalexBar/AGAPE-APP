@@ -60,7 +60,7 @@ export default function VerificationScreen({ navigation }) {
         actualizarUsuario({ is_verified: true });
       }
     } catch (e) {
-      Alert.alert('Error', e.response?.data?.error || 'Error al verificar.');
+      Alert.alert('Error', e.response?.data?.error?.message || 'Error al verificar.');
     } finally {
       setProcesando(false);
     }
@@ -218,3 +218,4 @@ const styles = StyleSheet.create({
   btnSecundario: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12, marginTop: 8 },
   btnSecundarioTexto: { color: '#fff', fontSize: 15 },
 });
+

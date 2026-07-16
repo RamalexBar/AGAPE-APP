@@ -108,7 +108,7 @@ export default function VideoCallScreen({ route, navigation }) {
       setLlamadaId(data.llamada_id);
       await iniciarEngine(data.canal, data.app_id, data.token, data.uid);
     } catch (e) {
-      const msg = e.response?.data?.error || 'No se pudo iniciar la videollamada.';
+      const msg = e.response?.data?.error?.message || 'No se pudo iniciar la videollamada.';
       Alert.alert('Error', msg, [{ text: 'OK', onPress: () => navigation.goBack() }]);
     }
   };
@@ -379,3 +379,4 @@ const styles = StyleSheet.create({
   btnLlamada: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center' },
   llamadaSubtitulo: { color: COLORES.muted, fontSize: 12 },
 });
+

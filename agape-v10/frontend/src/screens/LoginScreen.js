@@ -1,4 +1,4 @@
-// ================================================
+﻿// ================================================
 // ÁGAPE v10 — Login Screen (Producción)
 // Diseño profesional, validaciones mejoradas
 // ================================================
@@ -99,8 +99,7 @@ export default function LoginScreen({ navigation }) {
       setCargando(true);
       await login(emailTrimmed, password);
     } catch (error) {
-      const msg = error.response?.data?.error
-        || error.response?.data?.message
+      const msg = error.response?.data?.error?.message
         || 'Error al iniciar sesión. Verifica tus datos.';
       Alert.alert('Error', msg);
     } finally {
@@ -257,5 +256,6 @@ const styles = StyleSheet.create({
   legalTexto:      { color: COLORES.muted, fontSize: 11, textAlign: 'center', lineHeight: 17 },
   legalLink:       { color: COLORES.secundario, fontWeight: '600' },
 });
+
 
 

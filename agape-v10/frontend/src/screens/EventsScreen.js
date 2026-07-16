@@ -58,7 +58,7 @@ export default function EventsScreen({ navigation }) {
       cargar();
       Alert.alert('✅ Evento creado', '¡Tu evento ya es visible para personas cercanas!');
     } catch (e) {
-      Alert.alert('Error', e.response?.data?.error || 'Error al crear evento.');
+      Alert.alert('Error', e.response?.data?.error?.message || 'Error al crear evento.');
     } finally { setGuardando(false); }
   };
 
@@ -68,7 +68,7 @@ export default function EventsScreen({ navigation }) {
       Alert.alert('📩 Solicitud enviada', `Esperando que el organizador de "${titulo}" te acepte.`);
       cargar();
     } catch (e) {
-      Alert.alert('Error', e.response?.data?.error || 'No se pudo unir.');
+      Alert.alert('Error', e.response?.data?.error?.message || 'No se pudo unir.');
     }
   };
 
@@ -238,3 +238,4 @@ const styles = StyleSheet.create({
   btnGuardar: { borderRadius: 14, height: 52, justifyContent: 'center', alignItems: 'center' },
   btnGuardarTexto: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
+

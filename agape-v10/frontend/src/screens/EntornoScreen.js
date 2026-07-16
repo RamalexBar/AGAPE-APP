@@ -1,4 +1,4 @@
-﻿// AGAPE - Pantalla Entorno SIN react-native-maps
+// AGAPE - Pantalla Entorno SIN react-native-maps
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
 import * as Location from 'expo-location';
@@ -43,7 +43,7 @@ export default function EntornoScreen({ navigation }) {
       await entornoAPI.enviarMensajeInicial(usuarioSeleccionado.user_id, textomensaje.trim());
       setModalMensaje(false);
       Alert.alert('Mensaje enviado', 'Si responde, se abrira la conversacion.');
-    } catch (e) { Alert.alert('Error', e.response?.data?.error || 'Error al enviar.'); }
+    } catch (e) { Alert.alert('Error', e.response?.data?.error?.message || 'Error al enviar.'); }
     finally { setEnviando(false); }
   };
 
@@ -125,3 +125,4 @@ const styles = StyleSheet.create({
   input:{backgroundColor:'rgba(255,255,255,0.08)',borderRadius:14,padding:14,color:'#fff',fontSize:15,height:100,textAlignVertical:'top',borderWidth:0.5,borderColor:'rgba(255,255,255,0.15)'},
   btnEnviar:{borderRadius:14,height:52,justifyContent:'center',alignItems:'center'},
 });
+

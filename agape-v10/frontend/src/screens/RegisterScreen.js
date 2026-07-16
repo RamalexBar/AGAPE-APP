@@ -1,4 +1,4 @@
-// ================================================
+﻿// ================================================
 // ÁGAPE - Pantalla de Registro (3 pasos)
 // Archivo: frontend/src/screens/RegisterScreen.js
 // ================================================
@@ -139,7 +139,8 @@ const validarPaso1 = () => {
         if (d && typeof d === 'object') {
           if (typeof d.error === 'string') mensaje = d.error;
           else if (typeof d.message === 'string') mensaje = d.message;
-          else mensaje = JSON.stringify(d);
+          else if (typeof d.error?.message === 'string') mensaje = d.error.message;
+          else mensaje = 'Error al registrarse. Inténtalo de nuevo.';
         } else if (typeof error?.message === 'string') {
           mensaje = error.message;
         }
@@ -429,4 +430,5 @@ const styles = StyleSheet.create({
   btnSiguienteTexto: { color: '#fff', fontSize: 16, fontWeight: '600' },
   yaTenga: { textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 14 },
 });
+
 
