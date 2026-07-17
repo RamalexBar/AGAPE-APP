@@ -1,4 +1,4 @@
-// ================================================
+﻿// ================================================
 // ÁGAPE v10.1 — API Service (Bloqueantes corregidos)
 // ================================================
 
@@ -152,6 +152,13 @@ export const spiritualAPI = {
   getRetos:        () => api.get('/api/spiritual/challenges'),
   completarReto:   (id) => api.post(`/api/spiritual/challenges/${id}/complete`),
   getViaje:        () => api.get('/api/spiritual/journey'),
+};
+
+// -- ENTORNO (personas cercanas por ubicacion) --
+export const entornoAPI = {
+  actualizarUbicacion: (lat, lon) => api.post('/api/entorno/ubicacion', { lat, lon }),
+  getCercanos:         (radio = 30) => api.get(`/api/entorno/cercanos?radio=${radio}`),
+  enviarMensajeInicial:(destinatario_id, texto) => api.post('/api/entorno/mensaje', { destinatario_id, texto }),
 };
 
 export default api;

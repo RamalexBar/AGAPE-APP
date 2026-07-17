@@ -1,5 +1,5 @@
-// ================================================
-// ÁGAPE v10 — Zustand Store (Production Ready)
+﻿// ================================================
+// ÃGAPE v10 â€” Zustand Store (Production Ready)
 // Estado global limpio, persistente y reactivo
 // ================================================
 import { create } from 'zustand';
@@ -11,11 +11,15 @@ const LIKES_INTERVALO_MS = 12 * 60 * 60 * 1000; // 12 horas
 
 const useStore = create((set, get) => ({
 
-  // ── AUTH ──────────────────────────────────────────────
+  // â”€â”€ AUTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   user: null,
   token: null,
   isAuthenticated: false,
   isLoading: true,
+
+  // -- ENTORNO (personas cercanas) --
+  usuariosCercanos: [],
+  setUsuariosCercanos: (usuarios) => set({ usuariosCercanos: usuarios }),
 
   inicializar: async () => {
     try {
@@ -72,7 +76,7 @@ const useStore = create((set, get) => ({
   actualizarUsuario: (datos) =>
     set((state) => ({ user: { ...state.user, ...datos } })),
 
-  // ── SISTEMA DE LIKES (20 gratis / 12h) ────────────────
+  // â”€â”€ SISTEMA DE LIKES (20 gratis / 12h) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   likesRestantes: LIKES_FREE,
   likesSiguienteReset: null,
 
@@ -119,19 +123,19 @@ const useStore = create((set, get) => ({
     return true;
   },
 
-  // ── FEED DE PERFILES ──────────────────────────────────
+  // â”€â”€ FEED DE PERFILES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   perfilesFeed: [],
   setPerfilesFeed: (perfiles) => set({ perfilesFeed: perfiles }),
   removerPerfilFeed: (id) =>
     set((state) => ({ perfilesFeed: state.perfilesFeed.filter(p => p.id !== id) })),
 
-  // ── MATCHES ───────────────────────────────────────────
+  // â”€â”€ MATCHES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   matches: [],
   nuevoMatch: null,
   setNuevoMatch: (match) => set({ nuevoMatch: match }),
   limpiarNuevoMatch: () => set({ nuevoMatch: null }),
 
-  // ── MENSAJES ──────────────────────────────────────────
+  // â”€â”€ MENSAJES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   mensajesActuales: {},
   mensajesNoLeidos: 0,
 
@@ -158,5 +162,6 @@ const useStore = create((set, get) => ({
 }));
 
 export default useStore;
+
 
 
