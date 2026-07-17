@@ -1,10 +1,26 @@
-﻿// src/routes/profiles.js
+// src/routes/profiles.js
 const router = require('express').Router();
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 const { body } = require('express-validator');
 const { validate } = require('../middlewares/validate');
 const { authenticateToken } = require('../middlewares/auth');
 const profileService = require('../services/profileService');
 const { deleteAccountPermanently } = require('../services/accountDeletionService');
+const supabase = require('../config/supabase');
+
+const BUCKET_FOTOS = 'avatars';
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB máximo por foto
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(Object.assign(new Error('Solo se permiten archivos de imagen.'), { status: 400 }));
+    }
+    cb(null, true);
+  },
+});
 
 const INTENCION_VALIDA     = ['amistad', 'noviazgo_cristiano', 'matrimonio'];
 const COMPROMISO_VALIDO    = ['casual', 'serio', 'muy_serio'];
@@ -43,6 +59,41 @@ router.put('/me', authenticateToken,
     catch (e) { next(e); }
   }
 );
+
+// POST /api/profiles/me/photos — sube un archivo real de foto (multipart/form-data, campo 'photo')
+router.post('/me/photos', authenticateToken, upload.single('photo'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se recibió ningún archivo.' });
+    }
+
+    const perfilActual = await profileService.getMyProfile(req.user.id);
+    const fotosActuales = perfilActual.profiles?.fotos || [];
+
+    if (fotosActuales.length >= 6) {
+      return res.status(400).json({ error: 'Ya tienes el máximo de 6 fotos.' });
+    }
+
+    const ext = (req.file.mimetype.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+    const path = `${req.user.id}/${uuidv4()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET_FOTOS)
+      .upload(path, req.file.buffer, { contentType: req.file.mimetype, upsert: false });
+
+    if (uploadError) {
+      throw Object.assign(new Error('Error al subir la imagen: ' + uploadError.message), { status: 500 });
+    }
+
+    const { data: pub } = supabase.storage.from(BUCKET_FOTOS).getPublicUrl(path);
+    const nuevaUrl = pub.publicUrl;
+    const nuevasFotos = [...fotosActuales, nuevaUrl];
+
+    await profileService.updatePhotos(req.user.id, nuevasFotos);
+
+    res.status(201).json({ url: nuevaUrl, fotos: nuevasFotos });
+  } catch (e) { next(e); }
+});
 
 // PUT /api/profiles/me/photos
 router.put('/me/photos', authenticateToken,
