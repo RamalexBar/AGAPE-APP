@@ -7,6 +7,22 @@ const jwt         = require('jsonwebtoken');
 const supabase    = require('../config/supabase');
 const { actualizarActividad } = require('../services/presenceService');
 const notificationService     = require('../services/notificationService');
+const chatService              = require('../services/chatService');
+
+// El frontend identifica los chats por "match_id" (connections.id).
+// Esta función resuelve/crea la conversación real correspondiente.
+async function resolverConversacion(matchId, userId) {
+  const { data: conn } = await supabase
+    .from('connections')
+    .select('user_id_1, user_id_2')
+    .eq('id', matchId)
+    .or('user_id_1.eq.' + userId + ',user_id_2.eq.' + userId)
+    .single();
+  if (!conn) return null;
+  const otroId = conn.user_id_1 === userId ? conn.user_id_2 : conn.user_id_1;
+  const { conversation_id } = await chatService.getOrCreateConversation(userId, otroId);
+  return conversation_id;
+}
 
 module.exports = (server) => {
   const io = new Server(server, {
@@ -53,54 +69,55 @@ module.exports = (server) => {
       io.to('user_' + otroId).emit('user_online', { userId, online: true });
     });
 
-    socket.on('join_conversation', async ({ conversationId }) => {
-      const { data } = await supabase
-        .from('conversations').select('id')
-        .eq('id', conversationId)
-        .or('user_id_1.eq.' + userId + ',user_id_2.eq.' + userId)
-        .single();
-      if (!data) return socket.emit('error', { code: 'CONV_NOT_FOUND', mensaje: 'Conversación no encontrada.' });
-      socket.join('conv_' + conversationId);
-      socket.emit('joined_conversation', { conversationId });
+    socket.on('unirse_chat', async ({ match_id }) => {
+      try {
+        const conversationId = await resolverConversacion(match_id, userId);
+        if (!conversationId) return socket.emit('error', { code: 'MATCH_NOT_FOUND', mensaje: 'Match no encontrado.' });
+        socket.join('match_' + match_id);
+        const mensajes = await chatService.getMessages(userId, conversationId, { limite: 50 });
+        socket.emit('historial_mensajes', { mensajes });
+      } catch (err) {
+        socket.emit('error', { code: 'JOIN_FAILED', mensaje: 'No se pudo unir al chat.' });
+      }
     });
 
-    socket.on('send_message', async ({ conversationId, content, tipo = 'text', media_url = null }) => {
+    socket.on('enviar_mensaje', async ({ match_id, contenido, tipo = 'text', media_url = null }) => {
       try {
-        if (tipo === 'text' && !content?.trim())
+        if (tipo === 'text' && !contenido?.trim())
           return socket.emit('error', { code: 'EMPTY_MSG', mensaje: 'Mensaje vacío.' });
-        if ((content?.length || 0) > 2000)
+        if ((contenido?.length || 0) > 2000)
           return socket.emit('error', { code: 'MSG_TOO_LONG', mensaje: 'Mensaje demasiado largo.' });
 
-        const { data: conv } = await supabase.from('conversations').select('id, user_id_1, user_id_2')
-          .eq('id', conversationId)
-          .or('user_id_1.eq.' + userId + ',user_id_2.eq.' + userId)
-          .single();
-        if (!conv) return socket.emit('error', { code: 'CONV_NOT_FOUND', mensaje: 'Conversación no encontrada.' });
+        const conversationId = await resolverConversacion(match_id, userId);
+        if (!conversationId) return socket.emit('error', { code: 'MATCH_NOT_FOUND', mensaje: 'Match no encontrado.' });
+
+        const { data: conv } = await supabase.from('conversations')
+          .select('user_id_1, user_id_2').eq('id', conversationId).single();
 
         const { data: msg, error } = await supabase.from('messages')
-          .insert({ conversation_id: conversationId, sender_id: userId, content: content?.trim(), tipo, media_url })
+          .insert({ conversation_id: conversationId, sender_id: userId, content: contenido?.trim(), tipo, media_url })
           .select().single();
         if (error) throw error;
 
         await supabase.from('conversations').update({ last_message_at: new Date().toISOString() }).eq('id', conversationId);
-        io.to('conv_' + conversationId).emit('new_message', msg);
+        io.to('match_' + match_id).emit('nuevo_mensaje', msg);
 
         const destId = conv.user_id_1 === userId ? conv.user_id_2 : conv.user_id_1;
         if (!isOnline(destId)) {
           const { data: sender } = await supabase.from('users').select('nombre').eq('id', userId).single();
-          notificationService.notificarNuevoMensaje(destId, { nombreDe: sender?.nombre||'...', preview: content?.trim()||'' }).catch(() => {});
+          notificationService.notificarNuevoMensaje(destId, { nombreDe: sender?.nombre||'...', preview: contenido?.trim()||'' }).catch(() => {});
         }
       } catch (err) {
-        console.error('[Socket] send_message:', err.message);
+        console.error('[Socket] enviar_mensaje:', err.message);
         socket.emit('error', { code: 'SEND_FAILED', mensaje: 'Error al enviar mensaje.' });
       }
     });
 
-    socket.on('typing_start', ({ conversationId }) => {
-      socket.to('conv_' + conversationId).emit('user_typing', { userId, conversationId });
+    socket.on('escribiendo', ({ match_id }) => {
+      socket.to('match_' + match_id).emit('usuario_escribiendo', { user_id: userId });
     });
-    socket.on('typing_stop', ({ conversationId }) => {
-      socket.to('conv_' + conversationId).emit('user_stopped_typing', { userId, conversationId });
+    socket.on('dejo_de_escribir', ({ match_id }) => {
+      socket.to('match_' + match_id).emit('usuario_dejo_escribir');
     });
 
     socket.on('mark_read', async ({ conversationId }) => {

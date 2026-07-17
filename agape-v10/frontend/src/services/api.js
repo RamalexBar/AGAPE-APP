@@ -58,10 +58,10 @@ export const profileAPI = {
   uploadPhoto:   (formData) => api.post('/api/profiles/me/photos', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  reportUser: (userId, motivo, descripcion) =>
-    api.post('/api/reports', { reported_user_id: userId, motivo, descripcion }),
+  reportUser: (userId, razon, descripcion) =>
+    api.post('/api/reports', { reported_user_id: userId, razon, descripcion }),
   blockUser: (userId) =>
-    api.post('/api/reports/block', { blocked_user_id: userId }),
+    api.post(`/api/reports/block/${userId}`),
 };
 
 // ── MATCHES & SWIPE ───────────────────────────────────────
@@ -147,11 +147,11 @@ export const invisibleAPI = {
 
 // ── ESPIRITUAL ────────────────────────────────────────────
 export const spiritualAPI = {
-  getDevocional:   () => api.get('/api/spiritual/devotional/today'),
-  getVersiculoDia: () => api.get('/api/spiritual/verse/today'),
-  getRetos:        () => api.get('/api/spiritual/challenges'),
-  completarReto:   (id) => api.post(`/api/spiritual/challenges/${id}/complete`),
-  getViaje:        () => api.get('/api/spiritual/journey'),
+  getDevocional:   () => api.get('/api/spiritual/devocional/hoy'),
+  getVersiculoDia: () => api.get('/api/spiritual/devocional/publico'),
+  getRetos:        () => api.get('/api/spiritual/misiones'),
+  completarReto:   (id) => api.post(`/api/spiritual/misiones/${id}/completar`),
+  getViaje:        () => api.get('/api/spiritual/perfil'),
 };
 
 // -- ENTORNO (personas cercanas por ubicacion) --

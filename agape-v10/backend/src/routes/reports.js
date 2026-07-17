@@ -1,4 +1,4 @@
-// src/routes/reports.js
+﻿// src/routes/reports.js
 const router = require('express').Router();
 const { body } = require('express-validator');
 const { validate } = require('../middlewares/validate');
@@ -12,6 +12,7 @@ const RAZONES_VALIDAS = [
   'spam',
   'contenido_no_cristiano',
   'acoso',
+  'menor_de_edad',
   'otro',
 ];
 
@@ -20,7 +21,7 @@ const RAZONES_VALIDAS = [
 router.post('/',
   authenticateToken,
   body('reported_user_id').notEmpty().withMessage('ID de usuario requerido.'),
-  body('razon').isIn(RAZONES_VALIDAS).withMessage('Razón inválida.'),
+  body('razon').isIn(RAZONES_VALIDAS).withMessage('RazÃ³n invÃ¡lida.'),
   body('descripcion').optional().isLength({ max: 500 }),
   validate,
   async (req, res, next) => {
@@ -31,7 +32,7 @@ router.post('/',
         return res.status(400).json({ error: 'No puedes reportarte a ti mismo.' });
       }
 
-      // Verificar reporte duplicado reciente (últimas 24h)
+      // Verificar reporte duplicado reciente (Ãºltimas 24h)
       const hace24h = new Date(Date.now() - 86400000).toISOString();
       const { data: existe } = await supabase
         .from('reports')
@@ -55,7 +56,7 @@ router.post('/',
 
       if (error) throw Object.assign(new Error('Error al crear reporte.'), { status: 500 });
 
-      res.status(201).json({ mensaje: 'Reporte enviado. Nuestro equipo lo revisará. 🙏' });
+      res.status(201).json({ mensaje: 'Reporte enviado. Nuestro equipo lo revisarÃ¡. ðŸ™' });
     } catch (e) { next(e); }
   }
 );
@@ -94,3 +95,4 @@ router.delete('/block/:userId', authenticateToken, async (req, res, next) => {
 });
 
 module.exports = router;
+

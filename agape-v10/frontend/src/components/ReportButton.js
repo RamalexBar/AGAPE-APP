@@ -1,4 +1,4 @@
-// ================================================
+﻿// ================================================
 // ÁGAPE — Botón de Reporte + Bloqueo
 // Apple Guideline 1.2 — UGC moderation required
 // Usar en: ProfileScreen, ChatScreen
@@ -9,12 +9,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { profileAPI } from '../services/api';
 
 const MOTIVOS = [
-  { id: 'fake_profile',   label: 'Perfil falso o spam' },
-  { id: 'inappropriate',  label: 'Contenido inapropiado' },
-  { id: 'harassment',     label: 'Acoso o intimidación' },
-  { id: 'hate_speech',    label: 'Discurso de odio' },
-  { id: 'underage',       label: 'Posible menor de edad' },
-  { id: 'other',          label: 'Otro motivo' },
+  { id: 'perfil_falso',              label: 'Perfil falso o spam' },
+  { id: 'comportamiento_inapropiado', label: 'Contenido inapropiado' },
+  { id: 'acoso',                     label: 'Acoso o intimidacion' },
+  { id: 'lenguaje_ofensivo',         label: 'Discurso de odio' },
+  { id: 'menor_de_edad',             label: 'Posible menor de edad' },
+  { id: 'otro',                      label: 'Otro motivo' },
 ];
 
 export default function ReportButton({ userId, userName, onBlock }) {

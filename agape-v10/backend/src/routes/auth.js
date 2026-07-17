@@ -1,4 +1,4 @@
-// src/routes/auth.js
+﻿// src/routes/auth.js
 const router = require('express').Router();
 const { body } = require('express-validator');
 const { validate } = require('../middlewares/validate');
@@ -7,16 +7,16 @@ const authService = require('../services/authService');
 const { solicitarReset, confirmarReset } = require('../services/passwordResetService');
 const legalService = require('../services/legalService');
 
-// POST /api/auth/register  — incluye referral_code + consent obligatorio
+// POST /api/auth/register  â€” incluye referral_code + consent obligatorio
 router.post('/register',
   body('nombre').trim().notEmpty().isLength({ min: 2, max: 60 }),
   body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 8 }).withMessage('Mínimo 8 caracteres.'),
+  body('password').isLength({ min: 8 }).withMessage('MÃ­nimo 8 caracteres.'),
   body('genero').isIn(['M', 'F', 'otro']),
   body('fecha_nacimiento').optional().isISO8601(),
   body('referral_code').optional().isString().isLength({ min: 6, max: 12 }),
-  body('accepted_terms').equals('true').withMessage('Debes aceptar los términos de servicio.'),
-  body('accepted_privacy').equals('true').withMessage('Debes aceptar la política de privacidad.'),
+  body('accepted_terms').equals('true').withMessage('Debes aceptar los tÃ©rminos de servicio.'),
+  body('accepted_privacy').equals('true').withMessage('Debes aceptar la polÃ­tica de privacidad.'),
   validate,
   async (req, res, next) => {
     try {
@@ -96,6 +96,11 @@ router.get('/me', authenticateToken, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// POST /api/auth/logout
+router.post('/logout', authenticateToken, (req, res) => {
+  res.json({ success: true, mensaje: 'Sesion cerrada.' });
+});
+
 // POST /api/auth/google
 router.post('/google',
   body('email').isEmail().normalizeEmail(),
@@ -148,4 +153,5 @@ router.post('/google',
 );
 
 module.exports = router;
+
 
