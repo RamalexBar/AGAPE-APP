@@ -1,4 +1,4 @@
-// src/routes/profiles.js
+﻿// src/routes/profiles.js
 const router = require('express').Router();
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
@@ -67,8 +67,12 @@ router.post('/me/photos', authenticateToken, upload.single('photo'), async (req,
       return res.status(400).json({ error: 'No se recibió ningún archivo.' });
     }
 
-    const perfilActual = await profileService.getMyProfile(req.user.id);
-    const fotosActuales = perfilActual.profiles?.fotos || [];
+    const { data: perfilRow } = await supabase
+      .from('profiles')
+      .select('fotos')
+      .eq('user_id', req.user.id)
+      .maybeSingle();
+    const fotosActuales = perfilRow?.fotos || [];
 
     if (fotosActuales.length >= 6) {
       return res.status(400).json({ error: 'Ya tienes el máximo de 6 fotos.' });

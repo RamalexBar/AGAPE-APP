@@ -1,4 +1,4 @@
-// ================================================
+﻿// ================================================
 // ÁGAPE — Matching Cristiano Inteligente v3
 // Afinidad espiritual + intereses + actividad reciente
 // Solo muestra usuarios activos en el feed
@@ -94,7 +94,7 @@ const excluir = new Set([userId, ...(yaVistos||[]).map(s=>s.to_user_id), ...(blo
 
   let q = supabase
     .from('users')
-    .select('id, nombre, edad, avatar_url, bio, ubicacion_ciudad, nivel, connection_purpose, denomination, spiritual_habits, valores, last_active_at, is_verified, is_faith_verified, spiritual_profiles(total_xp, nivel, racha_devocional), profiles(fotos, intereses)')
+    .select('id, nombre, edad, avatar_url, bio, ubicacion_ciudad, nivel, connection_purpose, denomination, spiritual_habits, valores, last_active_at, is_verified, is_faith_verified, spiritual_profiles(total_xp, nivel, racha_devocional)')
     .eq('is_active', true).eq('is_banned', false)
     .not('id', 'in', `(${excStr})`);
 
@@ -106,8 +106,19 @@ const excluir = new Set([userId, ...(yaVistos||[]).map(s=>s.to_user_id), ...(blo
   const { data: candidatos } = await q.limit(200);
   if (!candidatos?.length) return [];
 
+  const { data: perfilesFotos } = await supabase
+    .from('profiles')
+    .select('user_id, fotos, intereses')
+    .in('user_id', candidatos.map(c => c.id));
+  const fotosPorUsuario = new Map((perfilesFotos || []).map(p => [p.user_id, p]));
+
   return candidatos
-    .map(c => { c.intereses = c.profiles?.intereses||[]; return { ...c, compatibilidad: calcularCompatibilidad(yo,c), presencia: calcularEstado(c.last_active_at) }; })
+    .map(c => {
+      const perfil = fotosPorUsuario.get(c.id);
+      c.intereses = perfil?.intereses || [];
+      c._fotos = perfil?.fotos || [];
+      return { ...c, compatibilidad: calcularCompatibilidad(yo,c), presencia: calcularEstado(c.last_active_at) };
+    })
     .filter(p => p.compatibilidad.es_compatible)
     .sort((a,b) => { if(a.presencia.online!==b.presencia.online) return a.presencia.online?-1:1; return b.compatibilidad.score_total-a.compatibilidad.score_total; })
     .slice(0, limite)
@@ -117,7 +128,7 @@ const excluir = new Set([userId, ...(yaVistos||[]).map(s=>s.to_user_id), ...(blo
       nivel_espiritual: { nivel: p.spiritual_profiles?.nivel||1, xp: p.spiritual_profiles?.total_xp||0, racha: p.spiritual_profiles?.racha_devocional||0 },
       proposito_conexion: p.connection_purpose, denominacion: p.denomination,
       is_verified: p.is_verified, is_faith_verified: p.is_faith_verified,
-      fotos: p.profiles?.fotos||[], intereses: p.intereses,
+      fotos: p._fotos, intereses: p.intereses,
       compatibilidad: p.compatibilidad, presencia: p.presencia,
     }));
 };
