@@ -17,7 +17,7 @@ import { COLORES, SOMBRAS } from '../utils/constants';
 import { tiempoRelativo, obtenerIniciales, colorAvatar } from '../utils/helpers';
 
 export default function MatchesScreen({ navigation }) {
-  const { user } = useStore();
+  const { user, resetearNoLeidos } = useStore();
   const insets   = useSafeAreaInsets();
   const [matches,        setMatches]        = useState([]);
   const [likesRecibidos, setLikesRecibidos] = useState(0);
@@ -42,7 +42,7 @@ export default function MatchesScreen({ navigation }) {
     }
   }, []);
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => { cargar(); resetearNoLeidos(); }, []);
 
   const renderMatch = ({ item }) => {
     const otro  = item.user1_id === user?.id ? item.user2 : item.user1;

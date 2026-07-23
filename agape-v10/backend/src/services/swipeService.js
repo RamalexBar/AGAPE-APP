@@ -86,10 +86,14 @@ const registrarAnuncio = async (userId) => {
     throw Object.assign(new Error('Ya usaste el máximo de anuncios por hoy.'), { status: 429 });
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('user_swipe_counters')
     .update({ ad_bonus_used: contador.ad_bonus_used + 1 })
     .eq('user_id', userId).eq('swipe_date', hoy).select().single();
+
+  if (error || !data) {
+    throw Object.assign(new Error('Error al registrar el anuncio.'), { status: 500 });
+  }
 
   const nuevoAnuncios  = data.ad_bonus_used;
   const bonusReferido  = data.referral_bonus || 0;

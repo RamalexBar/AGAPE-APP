@@ -11,6 +11,8 @@ import { Ionicons } from '@expo/vector-icons';
 import useStore from '../store/useStore';
 import useNotifications from '../hooks/useNotifications';
 import { COLORES } from '../utils/constants';
+import { conectarSocket, desconectarSocket, getSocket } from '../services/socketService';
+import { navigationRef, navegarGlobal } from './navigationRef';
 
 // Auth
 import LoginScreen    from '../screens/LoginScreen';
@@ -41,7 +43,6 @@ const TAB_ICONS = {
   Explorar: { activo: 'search',       inactivo: 'search-outline' },
   Entorno:  { activo: 'globe',        inactivo: 'globe-outline' },
   Mensajes: { activo: 'chatbubbles',  inactivo: 'chatbubbles-outline' },
-  Matches:  { activo: 'heart',        inactivo: 'heart-outline' },
   Perfil:   { activo: 'person',       inactivo: 'person-outline' },
 };
 
@@ -85,7 +86,6 @@ function MainTabs() {
           tabBarBadgeStyle: { backgroundColor: COLORES.primario, fontSize: 10 },
         }}
       />
-      <Tab.Screen name="Matches"  component={MatchesScreen} />
       <Tab.Screen name="Perfil"   component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -97,6 +97,29 @@ export default function AppNavigator() {
 
   useEffect(() => { inicializar(); }, []);
 
+  // Conecta/desconecta el socket según el estado de sesión — sin esto el
+  // chat en tiempo real, "escribiendo..." y las videollamadas nunca
+  // llegan a conectar (getSocket() devolvía null para siempre).
+  useEffect(() => {
+    if (!isAuthenticated) {
+      desconectarSocket();
+      return;
+    }
+
+    let activo = true;
+    conectarSocket().then((socket) => {
+      if (!activo || !socket) return;
+      socket.on('videocall_incoming', (data) => {
+        navegarGlobal('Videollamada', { llamada_entrante: data });
+      });
+    });
+
+    return () => {
+      activo = false;
+      getSocket()?.off('videocall_incoming');
+    };
+  }, [isAuthenticated]);
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: COLORES.fondo, justifyContent: 'center', alignItems: 'center' }}>
@@ -106,7 +129,7 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
         {!isAuthenticated ? (
           <>

@@ -4,6 +4,7 @@
 // ================================================
 const { Server }  = require('socket.io');
 const jwt         = require('jsonwebtoken');
+const env         = require('../config/env');
 const supabase    = require('../config/supabase');
 const { actualizarActividad } = require('../services/presenceService');
 const notificationService     = require('../services/notificationService');
@@ -42,7 +43,7 @@ module.exports = (server) => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('Token requerido.'));
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET);
+      const payload = jwt.verify(token, env.JWT_ACCESS_SECRET);
       socket.userId = payload.sub;
       next();
     } catch { next(new Error('Token inválido.')); }
@@ -113,15 +114,28 @@ module.exports = (server) => {
       }
     });
 
+    // Solo reenviamos el indicador de "escribiendo" a salas a las que este
+    // socket ya se unió legítimamente vía 'unirse_chat' (que sí valida
+    // que el usuario sea participante del match).
     socket.on('escribiendo', ({ match_id }) => {
+      if (!socket.rooms.has('match_' + match_id)) return;
       socket.to('match_' + match_id).emit('usuario_escribiendo', { user_id: userId });
     });
     socket.on('dejo_de_escribir', ({ match_id }) => {
+      if (!socket.rooms.has('match_' + match_id)) return;
       socket.to('match_' + match_id).emit('usuario_dejo_escribir');
     });
 
     socket.on('mark_read', async ({ conversationId }) => {
       try {
+        const { data: conv } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('id', conversationId)
+          .or('user_id_1.eq.' + userId + ',user_id_2.eq.' + userId)
+          .single();
+        if (!conv) return;
+
         const now = new Date().toISOString();
         await supabase.from('messages')
           .update({ read_at: now })

@@ -40,7 +40,8 @@ export const authAPI = {
     ...datos, accepted_terms: 'true', accepted_privacy: 'true',
   }),
   login:          (email, password)    => api.post('/api/auth/login', { email, password }),
-  loginConGoogle: (datos)              => api.post('/api/auth/google', datos),
+  // El backend verifica este accessToken directamente contra Google.
+  loginConGoogle: (accessToken)        => api.post('/api/auth/google', { accessToken }),
   getMe:          ()                   => api.get('/api/auth/me'),
   logout:         ()                   => api.post('/api/auth/logout'),
   forgotPassword: (email)              => api.post('/api/auth/forgot-password', { email }),
@@ -78,10 +79,12 @@ export const matchAPI = {
     if (tipo === 'dislike') {
       return api.post('/api/dislike', { to_user_id: userId });
     }
-    // 'like' y 'superlike' van a /api/like
+    // 'like' y 'superlike' van a /api/like.
+    // El backend solo acepta connection_type en ['friendship','community','marriage'];
+    // no existe un tipo dedicado para "superlike", así que se envía como like normal.
     return api.post('/api/like', {
       to_user_id: userId,
-      connection_type: tipo === 'superlike' ? 'superlike' : 'friendship',
+      connection_type: 'friendship',
     });
   },
 
@@ -117,15 +120,15 @@ export const monetizationAPI = {
   getStatus:       ()                                         => api.get('/api/subscriptions/status'),
   procesarCompra:  (plataforma, product_id, receipt_or_token) =>
     api.post('/api/subscriptions/purchase', { plataforma, product_id, receipt_or_token }),
-  restaurarCompras:(plataforma, receipts)                     =>
-    api.post('/api/subscriptions/restore', { plataforma, receipts }),
+  restaurarCompras:(plataforma, product_id, receipt_or_token) =>
+    api.post('/api/subscriptions/restore', { plataforma, product_id, receipt_or_token }),
 };
 
 // ── NOTIFICACIONES ────────────────────────────────────────
 export const notificationAPI = {
   registrarToken: (token, plataforma = 'android') =>
     api.post('/api/notifications/token', { token, plataforma }),
-  eliminarToken: () => api.delete('/api/notifications/token'),
+  eliminarToken: (token) => api.delete('/api/notifications/token', { data: { token } }),
 };
 
 // ── INTERESES / PAYWALL ───────────────────────────────────
@@ -152,6 +155,20 @@ export const spiritualAPI = {
   getRetos:        () => api.get('/api/spiritual/misiones'),
   completarReto:   (id) => api.post(`/api/spiritual/misiones/${id}/completar`),
   getViaje:        () => api.get('/api/spiritual/perfil'),
+};
+
+// ── VERIFICACIÓN DE IDENTIDAD ──────────────────────────────
+export const verificationAPI = {
+  enviarSelfie: (formData) => api.post('/api/verification/selfie', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+};
+
+// ── EVENTOS CERCANOS ──────────────────────────────────────
+export const eventsAPI = {
+  getCercanos: (radio = 30) => api.get(`/api/events/cercanos?radio=${radio}`),
+  crearEvento: (datos)      => api.post('/api/events', datos),
+  unirse:      (eventId)    => api.post(`/api/events/${eventId}/join`),
 };
 
 // -- ENTORNO (personas cercanas por ubicacion) --

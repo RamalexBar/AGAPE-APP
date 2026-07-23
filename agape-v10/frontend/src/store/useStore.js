@@ -25,8 +25,9 @@ const useStore = create((set, get) => ({
     try {
       const token = await SecureStore.getItemAsync('agape_token');
       if (token) {
+        // GET /api/auth/me devuelve el perfil directamente (sin envolver en { user }).
         const { data } = await authAPI.getMe();
-        set({ user: data.user, token, isAuthenticated: true, isLoading: false });
+        set({ user: data, token, isAuthenticated: true, isLoading: false });
         get().verificarLikes();
       } else {
         set({ isLoading: false });
@@ -37,9 +38,9 @@ const useStore = create((set, get) => ({
     }
   },
 
-  loginConGoogle: async (email, nombre, googleId) => {
+  loginConGoogle: async (accessToken) => {
     try {
-      const { data } = await authAPI.loginConGoogle({ email, nombre, google_id: googleId });
+      const { data } = await authAPI.loginConGoogle(accessToken);
       await SecureStore.setItemAsync('agape_token', data.accessToken);
       set({ user: data.user, token: data.accessToken, isAuthenticated: true });
       get().verificarLikes();

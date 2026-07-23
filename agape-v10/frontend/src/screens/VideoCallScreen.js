@@ -104,7 +104,7 @@ export default function VideoCallScreen({ route, navigation }) {
   const solicitarLlamada = async () => {
     try {
       setEstado('conectando');
-      const { data } = await api.post('/videocall/iniciar', { match_id: match.match_id });
+      const { data } = await api.post('/api/videocall/iniciar', { match_id: match.match_id });
       setLlamadaId(data.llamada_id);
       await iniciarEngine(data.canal, data.app_id, data.token, data.uid);
     } catch (e) {
@@ -115,7 +115,7 @@ export default function VideoCallScreen({ route, navigation }) {
 
   const aceptarLlamada = async () => {
     try {
-      const { data } = await api.post(`/videocall/responder/${llamadaId}`, { accion: 'aceptar' });
+      const { data } = await api.post(`/api/videocall/responder/${llamadaId}`, { match_id: llamada_entrante.match_id, accion: 'aceptar' });
       await iniciarEngine(llamada_entrante.canal, llamada_entrante.app_id, data.token, data.uid);
     } catch (e) {
       Alert.alert('Error', 'No se pudo conectar.');
@@ -123,7 +123,7 @@ export default function VideoCallScreen({ route, navigation }) {
   };
 
   const rechazarLlamada = async () => {
-    await api.post(`/videocall/responder/${llamadaId}`, { accion: 'rechazar' }).catch(() => {});
+    await api.post(`/api/videocall/responder/${llamadaId}`, { match_id: llamada_entrante.match_id, accion: 'rechazar' }).catch(() => {});
     navigation.goBack();
   };
 
@@ -159,7 +159,8 @@ export default function VideoCallScreen({ route, navigation }) {
   const finalizarLlamada = async () => {
     limpiar();
     if (llamadaId) {
-      await api.post(`/videocall/finalizar/${llamadaId}`).catch(() => {});
+      const matchId = match?.match_id || llamada_entrante?.match_id;
+      await api.post(`/api/videocall/finalizar/${llamadaId}`, { match_id: matchId }).catch(() => {});
     }
     navigation.goBack();
   };

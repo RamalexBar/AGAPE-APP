@@ -160,7 +160,13 @@ const refreshToken = async (token) => {
 
 const changePassword = async (userId, { currentPassword, newPassword }) => {
   const { data: user } = await supabase.from('users').select('password_hash').eq('id', userId).single();
-  
+  if (!user) {
+    const err = new Error('Usuario no encontrado.');
+    err.status = 404;
+    err.code = 'AUTH_USER_NOT_FOUND';
+    throw err;
+  }
+
   const valid = await bcrypt.compare(currentPassword, user.password_hash);
   if (!valid) {
     const err = new Error('Contraseña actual incorrecta.');

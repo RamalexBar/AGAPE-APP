@@ -50,9 +50,17 @@ export default function EventsScreen({ navigation }) {
       Alert.alert('Campos requeridos', 'Título y fecha son obligatorios.');
       return;
     }
+    let fechaISO;
+    try {
+      fechaISO = new Date(fecha.trim().replace(' ', 'T')).toISOString();
+    } catch {
+      Alert.alert('Fecha inválida', 'Usa el formato AAAA-MM-DD HH:MM');
+      return;
+    }
+
     setGuardando(true);
     try {
-      await eventsAPI.crearEvento({ titulo, tipo, ciudad, fecha_evento: fecha, max_personas: maxPersonas, descripcion });
+      await eventsAPI.crearEvento({ titulo, tipo, ciudad, fecha_evento: fechaISO, max_personas: maxPersonas, descripcion });
       setModalCrear(false);
       setTitulo(''); setTipo(''); setCiudad(''); setFecha(''); setDescripcion('');
       cargar();

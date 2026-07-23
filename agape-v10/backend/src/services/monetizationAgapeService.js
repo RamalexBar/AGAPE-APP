@@ -231,7 +231,7 @@ const activarSuscripcion = async (userId, planId, { dias = 30, transactionId = n
   await supabase.from('subscriptions').update({ is_active: false }).eq('user_id', userId).eq('is_active', true);
 
   // Insertar nueva
-  const { data: nueva } = await supabase.from('subscriptions').insert({
+  const { data: nueva, error: errorInsert } = await supabase.from('subscriptions').insert({
     user_id:        userId,
     plan_type:      planId,
     is_active:      true,
@@ -241,6 +241,10 @@ const activarSuscripcion = async (userId, planId, { dias = 30, transactionId = n
     plataforma,
     precio_pagado:  dias >= 365 ? plan.precio_anual_cop : plan.precio_mensual_cop,
   }).select().single();
+
+  if (errorInsert || !nueva) {
+    throw Object.assign(new Error('Error al activar la suscripción.'), { status: 500 });
+  }
 
   // Bonus de monedas de bienvenida
   const bonusMonedas = planId === 'vip' ? 500 : 200;

@@ -53,7 +53,7 @@ app.use(cors({
 app.use('/api/auth/login',           limiters.auth);
 app.use('/api/auth/register',        limiters.auth);
 app.use('/api/auth/forgot-password', limiters.auth);
-app.use('/api/matches/swipe',        limiters.swipe);
+app.use('/api/like',                 limiters.swipe);
 app.use('/api/chat',                 limiters.chat);
 app.use('/api/reports',              limiters.reports);
 app.use('/api/',                     limiters.api);
@@ -98,6 +98,8 @@ app.use('/api/interests',     require('./routes/interests'));
 app.use('/api/webhooks',      require('./routes/webhooks'));
 app.use('/api/lemonsqueezy',  require('./routes/lemonsqueezy'));
 app.use('/api/translate',     require('./routes/translator'));
+app.use('/api/videocall',     require('./routes/videocall'));
+app.use('/api/wompi',         require('./routes/wompi'));
 
 // Legales pÃºblicos (App Store exige URLs sin auth)
 app.get('/privacy', (req, res) => res.redirect(env.PRIVACY_POLICY_URL));

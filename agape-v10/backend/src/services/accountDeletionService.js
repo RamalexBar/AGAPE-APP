@@ -22,39 +22,62 @@ const deleteAccountPermanently = async (userId) => {
 
   try {
     // 1. Cancelar suscripciones activas
-    await supabase
+    const r1 = await supabase
       .from('subscriptions')
-      .update({ is_active: false, cancelled_at: new Date().toISOString() })
-      .eq('user_id', userId);
+      .update({ is_active: false })
+      .eq('user_id', userId).eq('is_active', true);
+    if (r1.error) logger.error({ err: r1.error, userId }, '[ACCOUNT_DELETION] Error cancelando suscripciones');
 
-    // 2. Borrar mensajes del usuario
-    await supabase.from('messages').delete().eq('sender_id', userId);
+    // 2. Borrar conversaciones (y sus mensajes) donde participa el usuario
+    const { data: conversaciones } = await supabase
+      .from('conversations')
+      .select('id')
+      .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`);
+    const idsConversaciones = (conversaciones || []).map(c => c.id);
+    if (idsConversaciones.length) {
+      const rMsg = await supabase.from('messages').delete().in('conversation_id', idsConversaciones);
+      if (rMsg.error) logger.error({ err: rMsg.error, userId }, '[ACCOUNT_DELETION] Error borrando mensajes');
+      const rConv = await supabase.from('conversations').delete().in('id', idsConversaciones);
+      if (rConv.error) logger.error({ err: rConv.error, userId }, '[ACCOUNT_DELETION] Error borrando conversaciones');
+    }
 
     // 3. Borrar swipes/likes
-    await supabase.from('swipes').delete()
+    const r3 = await supabase.from('swipes').delete()
       .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`);
+    if (r3.error) logger.error({ err: r3.error, userId }, '[ACCOUNT_DELETION] Error borrando swipes');
 
-    // 4. Borrar matches
-    await supabase.from('matches').delete()
-      .or(`user1_id.eq.${userId},user2_id.eq.${userId}`);
+    // 4. Borrar conexiones (matches)
+    const r4 = await supabase.from('connections').delete()
+      .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`);
+    if (r4.error) logger.error({ err: r4.error, userId }, '[ACCOUNT_DELETION] Error borrando conexiones');
 
     // 5. Borrar datos de perfil espiritual
-    await supabase.from('spiritual_profiles').delete().eq('user_id', userId);
+    const r5 = await supabase.from('spiritual_profiles').delete().eq('user_id', userId);
+    if (r5.error) logger.error({ err: r5.error, userId }, '[ACCOUNT_DELETION] Error borrando perfil espiritual');
 
     // 6. Borrar tokens de push
-    await supabase.from('push_tokens').delete().eq('user_id', userId);
+    const r6 = await supabase.from('push_tokens').delete().eq('user_id', userId);
+    if (r6.error) logger.error({ err: r6.error, userId }, '[ACCOUNT_DELETION] Error borrando push tokens');
 
-    // 7. Borrar miembros de chat rooms
-    await supabase.from('chat_room_members').delete().eq('user_id', userId);
+    // 7. Borrar bloqueos (en ambas direcciones)
+    const r7 = await supabase.from('blocked_users').delete()
+      .or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
+    if (r7.error) logger.error({ err: r7.error, userId }, '[ACCOUNT_DELETION] Error borrando bloqueos');
 
     // 8. Borrar referidos
-    await supabase.from('referrals').delete()
+    const r8 = await supabase.from('referrals').delete()
       .or(`referrer_id.eq.${userId},referred_id.eq.${userId}`);
+    if (r8.error) logger.error({ err: r8.error, userId }, '[ACCOUNT_DELETION] Error borrando referidos');
 
-    // 9. Borrar perfil principal
-    await supabase.from('users').delete().eq('id', userId);
+    // 9. Borrar fila de perfil (fotos/intereses)
+    const r9 = await supabase.from('profiles').delete().eq('user_id', userId);
+    if (r9.error) logger.error({ err: r9.error, userId }, '[ACCOUNT_DELETION] Error borrando perfil');
 
-    // 10. ⚠️ CRÍTICO — Eliminar de Supabase auth.users
+    // 10. Borrar perfil principal
+    const r10 = await supabase.from('users').delete().eq('id', userId);
+    if (r10.error) logger.error({ err: r10.error, userId }, '[ACCOUNT_DELETION] Error borrando usuario');
+
+    // 11. ⚠️ CRÍTICO — Eliminar de Supabase auth.users
     // Sin esto, el revisor puede volver a entrar con las mismas credenciales
     const { error: authError } = await supabase.auth.admin.deleteUser(userId);
     if (authError) {

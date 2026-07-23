@@ -100,9 +100,27 @@ const sendMessage = async (userId, conversationId, { content, tipo = 'text', med
 };
 
 /**
+ * Verifica si existe un bloqueo entre dos usuarios (en cualquier dirección).
+ */
+const hayBloqueoEntre = async (userId, otroUserId) => {
+  const { data } = await supabase
+    .from('blocked_users')
+    .select('id')
+    .or(
+      `and(blocker_id.eq.${userId},blocked_id.eq.${otroUserId}),and(blocker_id.eq.${otroUserId},blocked_id.eq.${userId})`
+    )
+    .limit(1);
+  return (data || []).length > 0;
+};
+
+/**
  * Crear conversación entre dos usuarios (si no existe)
  */
 const getOrCreateConversation = async (userId, otroUserId) => {
+  if (await hayBloqueoEntre(userId, otroUserId)) {
+    throw Object.assign(new Error('No puedes escribirle a este usuario.'), { status: 403 });
+  }
+
   // Buscar conversación existente
   const { data: existing } = await supabase
     .from('conversations')
@@ -125,4 +143,4 @@ const getOrCreateConversation = async (userId, otroUserId) => {
   return { conversation_id: nueva.id, nueva: true };
 };
 
-module.exports = { getConversations, getMessages, sendMessage, getOrCreateConversation };
+module.exports = { getConversations, getMessages, sendMessage, getOrCreateConversation, hayBloqueoEntre };

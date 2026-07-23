@@ -115,14 +115,6 @@ router.delete('/me', authenticateToken, async (req, res, next) => {
   catch (e) { next(e); }
 });
 
-// GET /api/profiles/:id
-router.get('/:id', authenticateToken, async (req, res, next) => {
-  try { res.json(await profileService.getProfile(req.params.id)); }
-  catch (e) { next(e); }
-});
-
-module.exports = router;
-
 // ── Modo Invisible (Premium) ────────────────────────────────────────
 // GET /api/profiles/me/invisible
 router.get('/me/invisible', authenticateToken, async (req, res, next) => {
@@ -142,14 +134,10 @@ router.post('/me/invisible', authenticateToken, async (req, res, next) => {
   try {
     const { user } = req;
     // Solo premium puede activar modo invisible
-    const { data: sub } = await require('../config/supabase')
-      .from('subscriptions')
-      .select('status')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .single();
+    const { obtenerSuscripcion } = require('../services/monetizationAgapeService');
+    const suscripcion = await obtenerSuscripcion(user.id);
 
-    if (!sub && req.body.activo) {
+    if (!suscripcion.es_premium && req.body.activo) {
       return res.status(403).json({
         success: false,
         error: { code: 'PREMIUM_REQUIRED', message: 'El modo invisible es exclusivo para Premium.' },
@@ -173,17 +161,18 @@ router.get('/active', authenticateToken, async (req, res, next) => {
     const hace = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { data, error } = await require('../config/supabase')
       .from('users')
-      .select('id, nombre, ubicacion_ciudad, last_active_at, profiles(fotos)')
+      .select('id, nombre, edad, bio, ubicacion_ciudad, last_active_at, profiles(fotos, intereses)')
       .gt('last_active_at', hace)
       .neq('id', req.user.id)
       .limit(50);
     if (error) throw error;
     const perfiles = (data || []).map(u => ({
-      user_id: u.id,
+      id: u.id,
       nombre: u.nombre,
+      edad: u.edad,
       ciudad: u.ubicacion_ciudad,
       ultima_actividad: u.last_active_at,
-      fotos: u.profiles?.fotos || [],
+      profiles: { fotos: u.profiles?.fotos || [], bio: u.bio, intereses: u.profiles?.intereses || [] },
     }));
     res.json({ perfiles, total: perfiles.length });
   } catch (e) { next(e); }
@@ -202,3 +191,12 @@ router.get('/active/count', authenticateToken, async (req, res, next) => {
     res.json({ total_activos: count || 0 });
   } catch (e) { next(e); }
 });
+
+// GET /api/profiles/:id — debe ir AL FINAL: es una ruta comodín de un solo
+// segmento que de otro modo interceptaría /active, /me/invisible, etc.
+router.get('/:id', authenticateToken, async (req, res, next) => {
+  try { res.json(await profileService.getProfile(req.params.id)); }
+  catch (e) { next(e); }
+});
+
+module.exports = router;

@@ -1,6 +1,6 @@
 // ================================================
-// ÁGAPE v10 — Login Screen (Producción)
-// Diseño profesional, validaciones mejoradas
+// ï¿½GAPE v10 ï¿½ Login Screen (Producciï¿½n)
+// Diseï¿½o profesional, validaciones mejoradas
 // ================================================
 import React, { useState } from 'react';
 import {
@@ -57,7 +57,7 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [verPass,  setVerPass]  = useState(false);
   const [cargando, setCargando] = useState(false);
-  const { login } = useStore();
+  const { login, loginConGoogle } = useStore();
   const insets = useSafeAreaInsets();
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: '10624564655-l50psci368qio5cvlk19tiook04mkerq.apps.googleusercontent.com',
@@ -73,11 +73,9 @@ export default function LoginScreen({ navigation }) {
   const handleGoogleLogin = async (accessToken) => {
     try {
       setCargando(true);
-      const userInfoResponse = await fetch('https://www.googleapis.com/userinfo/v2/me', {
-        headers: { Authorization: 'Bearer ' + accessToken },
-      });
-      const userInfo = await userInfoResponse.json();
-      await loginConGoogle(userInfo.email, userInfo.name, userInfo.id);
+      // El backend verifica el accessToken directamente contra Google â€” no
+      // confiamos en datos de usuario provistos por el cliente.
+      await loginConGoogle(accessToken);
     } catch (error) {
       Alert.alert('Error', 'No se pudo iniciar sesion con Google.');
     } finally {
@@ -88,11 +86,11 @@ export default function LoginScreen({ navigation }) {
   const handleLogin = async () => {
     const emailTrimmed = email.trim().toLowerCase();
     if (!emailTrimmed || !password) {
-      Alert.alert('Campos requeridos', 'Ingresa tu correo y contraseña.');
+      Alert.alert('Campos requeridos', 'Ingresa tu correo y contraseï¿½a.');
       return;
     }
     if (!esEmailValido(emailTrimmed)) {
-      Alert.alert('Correo inválido', 'Verifica el formato de tu correo.');
+      Alert.alert('Correo invï¿½lido', 'Verifica el formato de tu correo.');
       return;
     }
     try {
@@ -100,7 +98,7 @@ export default function LoginScreen({ navigation }) {
       await login(emailTrimmed, password);
     } catch (error) {
       const msg = error.response?.data?.error?.message
-        || 'Error al iniciar sesión. Verifica tus datos.';
+        || 'Error al iniciar sesiï¿½n. Verifica tus datos.';
       Alert.alert('Error', msg);
     } finally {
       setCargando(false);
@@ -121,8 +119,8 @@ export default function LoginScreen({ navigation }) {
           {/* -- Logo -- */}
           <View style={styles.logoContenedor}>
             <AgapeLogo size={92} />
-            <Text style={styles.logoTexto}>ÁGAPE</Text>
-            <Text style={styles.logoSubtitulo}>Conexiones con propósito y fe</Text>
+            <Text style={styles.logoTexto}>ï¿½GAPE</Text>
+            <Text style={styles.logoSubtitulo}>Conexiones con propï¿½sito y fe</Text>
           </View>
 
           {/* -- Formulario -- */}
@@ -134,7 +132,7 @@ export default function LoginScreen({ navigation }) {
               <Ionicons name="mail-outline" size={18} color={COLORES.muted} style={styles.campoIco} />
               <TextInput
                 style={styles.campoInput}
-                placeholder="Correo electrónico"
+                placeholder="Correo electrï¿½nico"
                 placeholderTextColor={COLORES.muted}
                 value={email}
                 onChangeText={setEmail}
@@ -145,12 +143,12 @@ export default function LoginScreen({ navigation }) {
               />
             </View>
 
-            {/* Contraseña */}
+            {/* Contraseï¿½a */}
             <View style={styles.campo}>
               <Ionicons name="lock-closed-outline" size={18} color={COLORES.muted} style={styles.campoIco} />
               <TextInput
                 style={[styles.campoInput, { flex: 1 }]}
-                placeholder="Contraseña"
+                placeholder="Contraseï¿½a"
                 placeholderTextColor={COLORES.muted}
                 value={password}
                 onChangeText={setPassword}
@@ -165,15 +163,15 @@ export default function LoginScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            {/* Olvidé contraseña */}
+            {/* Olvidï¿½ contraseï¿½a */}
             <TouchableOpacity
               onPress={() => navigation.navigate('OlvideContrasena')}
               style={styles.olvidaste}
             >
-              <Text style={styles.olvidasteTexto}>¿Olvidaste tu contraseña?</Text>
+              <Text style={styles.olvidasteTexto}>ï¿½Olvidaste tu contraseï¿½a?</Text>
             </TouchableOpacity>
 
-            {/* Botón login */}
+            {/* Botï¿½n login */}
             <TouchableOpacity onPress={handleLogin} disabled={cargando} activeOpacity={0.88}>
               <LinearGradient
                 colors={COLORES.gradPrimario}
@@ -182,7 +180,7 @@ export default function LoginScreen({ navigation }) {
               >
                 {cargando
                   ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.btnLoginTexto}>Iniciar sesión</Text>
+                  : <Text style={styles.btnLoginTexto}>Iniciar sesiï¿½n</Text>
                 }
               </LinearGradient>
             </TouchableOpacity>
@@ -218,7 +216,7 @@ export default function LoginScreen({ navigation }) {
           <TouchableOpacity onPress={() => navigation.navigate('Legal')} style={styles.legal}>
             <Text style={styles.legalTexto}>
               Al continuar aceptas nuestros{' '}
-              <Text style={styles.legalLink}>Términos</Text>
+              <Text style={styles.legalLink}>Tï¿½rminos</Text>
               {' '}y{' '}
               <Text style={styles.legalLink}>Privacidad</Text>
             </Text>

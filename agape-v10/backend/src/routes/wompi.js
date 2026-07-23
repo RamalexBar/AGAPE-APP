@@ -9,12 +9,13 @@ router.post('/webhook', async (req, res) => {
     const body = JSON.stringify(req.body);
 
     const secret = process.env.WOMPI_EVENTOS;
-    const hash = crypto
+    const hash = Buffer.from(crypto
       .createHmac('sha256', secret)
       .update(body)
-      .digest('hex');
+      .digest('hex'), 'utf8');
+    const signatureBuf = Buffer.from(String(signature || ''), 'utf8');
 
-    if (hash !== signature) {
+    if (hash.length !== signatureBuf.length || !crypto.timingSafeEqual(hash, signatureBuf)) {
       return res.status(401).json({ error: 'Firma inválida' });
     }
 

@@ -32,7 +32,7 @@ export default function ChatScreen({ route, navigation }) {
   const escribiendoTimer  = useRef(null);
 
   const mensajes    = mensajesActuales[match.match_id] || [];
-  const otroUsuario = match.usuario || match.user1_id === user?.id ? match.user2 : match.user1;
+  const otroUsuario = match.usuario || (match.user1_id === user?.id ? match.user2 : match.user1);
   const fotoOtro    = otroUsuario?.profiles?.fotos?.[0];
   const nombreOtro  = otroUsuario?.profiles?.nombre || otroUsuario?.nombre || 'Usuario';
   const iniciales   = obtenerIniciales(nombreOtro);

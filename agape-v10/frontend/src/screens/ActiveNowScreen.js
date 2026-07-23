@@ -32,7 +32,7 @@ export default function ActiveNowScreen({ navigation }) {
         activeAPI.getActivosAhora(30),
         activeAPI.getContador(),
       ]);
-      setActivos(resActivos.data.activos || []);
+      setActivos(resActivos.data.perfiles || []);
       setContador(resContador.data.total_activos || 0);
     } catch (e) { console.error(e); }
     finally { setCargando(false); setRefrescando(false); }
@@ -47,7 +47,7 @@ export default function ActiveNowScreen({ navigation }) {
 
   const darLike = async (userId) => {
     try {
-      const { data } = await matchAPI.darLike(userId, 'like');
+      const { data } = await matchAPI.darLike(userId);
       if (data.es_match && data.es_nuevo) {
         navigation.navigate('Main');
       }
@@ -59,7 +59,7 @@ export default function ActiveNowScreen({ navigation }) {
     return (
       <TouchableOpacity
         style={styles.card}
-        onPress={() => navigation.navigate('VerPerfil', { userId: item.id })}
+        onPress={() => navigation.navigate('VerPerfil', { perfil: item })}
         activeOpacity={0.8}
       >
         <View style={styles.fotoContenedor}>

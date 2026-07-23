@@ -60,19 +60,30 @@ router.get('/cercanos',
         });
       }
 
-      const { data: candidatos, error } = await supabase
-        .from('users')
-        .select('id, nombre, avatar_url, ubicacion_ciudad, ubicacion_lat, ubicacion_lon, last_active_at')
-        .eq('is_active', true)
-        .eq('is_banned', false)
-        .not('ubicacion_lat', 'is', null)
-        .not('ubicacion_lon', 'is', null)
-        .neq('id', req.user.id)
-        .limit(200);
+      const [{ data: candidatos, error }, { data: bloqueados }] = await Promise.all([
+        supabase
+          .from('users')
+          .select('id, nombre, avatar_url, ubicacion_ciudad, ubicacion_lat, ubicacion_lon, last_active_at')
+          .eq('is_active', true)
+          .eq('is_banned', false)
+          .not('ubicacion_lat', 'is', null)
+          .not('ubicacion_lon', 'is', null)
+          .neq('id', req.user.id)
+          .limit(200),
+        supabase
+          .from('blocked_users')
+          .select('blocker_id, blocked_id')
+          .or(`blocker_id.eq.${req.user.id},blocked_id.eq.${req.user.id}`),
+      ]);
 
       if (error) throw Object.assign(new Error('Error al buscar personas cercanas.'), { status: 500 });
 
+      const idsExcluidos = new Set(
+        (bloqueados || []).map(b => (b.blocker_id === req.user.id ? b.blocked_id : b.blocker_id))
+      );
+
       const conDistancia = (candidatos || [])
+        .filter(c => !idsExcluidos.has(c.id))
         .map(c => ({
           ...c,
           distancia_km: Math.round(distanciaKm(yo.ubicacion_lat, yo.ubicacion_lon, c.ubicacion_lat, c.ubicacion_lon) * 10) / 10,

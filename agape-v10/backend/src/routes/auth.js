@@ -102,16 +102,36 @@ router.post('/logout', authenticateToken, (req, res) => {
 });
 
 // POST /api/auth/google
+// El cliente solo envía el accessToken de Google — el backend lo verifica
+// directamente contra la API de Google y usa esos datos verificados
+// (nunca confía en email/nombre/id enviados por el cliente).
 router.post('/google',
-  body('email').isEmail().normalizeEmail(),
-  body('nombre').trim().notEmpty(),
-  body('google_id').notEmpty(),
+  body('accessToken').notEmpty().withMessage('accessToken requerido.'),
   validate,
   async (req, res, next) => {
     try {
-      const { email, nombre, google_id } = req.body;
+      const axios = require('axios');
       const supabase = require('../config/supabase');
       const { generateTokens } = require('../middlewares/auth');
+
+      let googleUser;
+      try {
+        const { data } = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${req.body.accessToken}` },
+          timeout: 8000,
+        });
+        googleUser = data;
+      } catch {
+        return res.status(401).json({ error: { code: 'INVALID_GOOGLE_TOKEN', message: 'Token de Google inválido o expirado.' } });
+      }
+
+      if (!googleUser?.email || googleUser.email_verified === false) {
+        return res.status(401).json({ error: { code: 'UNVERIFIED_EMAIL', message: 'No se pudo verificar el correo de Google.' } });
+      }
+
+      const email     = googleUser.email;
+      const nombre    = googleUser.name || email.split('@')[0];
+      const google_id = googleUser.sub;
 
       // Buscar usuario existente
       let { data: user } = await supabase

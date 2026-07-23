@@ -48,7 +48,7 @@ export default function EntornoScreen({ navigation }) {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('VerPerfil', { userId: item.user_id })} activeOpacity={0.8}>
+    <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('VerPerfil', { perfil: { ...item, id: item.user_id } })} activeOpacity={0.8}>
       <View style={styles.fotoWrap}>
         {item.fotos?.[0] ? <Image source={{ uri: item.fotos[0] }} style={styles.foto} contentFit="cover" /> : <View style={[styles.foto, styles.fotoFallback]}><Text style={{fontSize:28}}>person</Text></View>}
         {item.is_online && <View style={styles.online} />}

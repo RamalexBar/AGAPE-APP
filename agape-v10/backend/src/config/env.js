@@ -23,6 +23,12 @@ const envSchema = Joi.object({
   
   PRIVACY_POLICY_URL: Joi.string().uri().required(),
   TERMS_OF_SERVICE_URL: Joi.string().uri().required(),
+
+  // Secreto compartido para autenticar los webhooks de Apple/Google
+  // (se configura como ?token=... en la URL de notificaciones del servidor
+  // en App Store Connect / Play Console). Opcional para no romper despliegues
+  // existentes, pero se recomienda encarecidamente definirlo en producción.
+  WEBHOOK_SHARED_SECRET: Joi.string().min(16).optional(),
 }).unknown().required();
 
 const { error, value: envVars } = envSchema.validate(process.env);

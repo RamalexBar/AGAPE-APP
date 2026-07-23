@@ -69,6 +69,33 @@ export default function SettingsScreen({ navigation }) {
     } finally { setCargandoInvisible(false); }
   };
 
+  const [eliminandoCuenta, setEliminandoCuenta] = useState(false);
+
+  const manejarEliminarCuenta = () => {
+    Alert.alert(
+      'Eliminar cuenta',
+      'Esta acción es irreversible: se borrarán permanentemente tu perfil, matches, mensajes y toda tu actividad. ¿Deseas continuar?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar definitivamente',
+          style: 'destructive',
+          onPress: async () => {
+            setEliminandoCuenta(true);
+            try {
+              await authAPI.deleteAccount();
+              await logout();
+            } catch (e) {
+              Alert.alert('Error', e.response?.data?.error?.message || 'No se pudo eliminar la cuenta. Intenta más tarde.');
+            } finally {
+              setEliminandoCuenta(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleLogout = () => {
     Alert.alert('Cerrar sesión', '¿Seguro que quieres salir?', [
       { text: 'Cancelar', style: 'cancel' },
@@ -158,9 +185,9 @@ export default function SettingsScreen({ navigation }) {
           <Text style={styles.seccionTitulo}>Cuenta</Text>
           <View style={styles.seccionCard}>
             <Opcion icono="shield-checkmark-outline" titulo="Verificar identidad" subtitulo={user?.is_verified ? 'Perfil verificado ✓' : 'Agrega el sello de confianza'} color="#4ade80" onPress={() => navigation.navigate('Verificacion')} />
-            <Opcion icono="person-outline" titulo="Editar perfil" subtitulo="Fotos, bio e intereses" onPress={() => navigation.navigate('EditarPerfil')} />
+            <Opcion icono="person-outline" titulo="Editar perfil" subtitulo="Fotos, bio e intereses" onPress={() => navigation.navigate('VerPerfil')} />
             <Opcion icono="star-outline" titulo="Ágape Premium" subtitulo={user?.subscription_type === 'premium' ? 'Activo' : 'Sin límites ni anuncios'} color="#FFD700" onPress={() => navigation.navigate('Premium')} />
-            <Opcion icono="wallet-outline" titulo="Mis monedas" subtitulo={`${user?.coins_balance || 0} monedas disponibles`} color="#FF9B6B" onPress={() => navigation.navigate('Monedas')} />
+            <Opcion icono="wallet-outline" titulo="Mis monedas" subtitulo={`${user?.coins_balance || 0} monedas disponibles`} color="#FF9B6B" onPress={() => navigation.navigate('Logros')} />
           </View>
         </View>
 
@@ -221,9 +248,13 @@ export default function SettingsScreen({ navigation }) {
           </Text>
           <TouchableOpacity
             onPress={manejarEliminarCuenta}
+            disabled={eliminandoCuenta}
             style={{ backgroundColor: 'rgba(255,100,100,0.08)', borderWidth: 1, borderColor: 'rgba(255,100,100,0.25)', borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}
           >
-            <Ionicons name="trash-outline" size={20} color="#FF6464" />
+            {eliminandoCuenta
+              ? <ActivityIndicator color="#FF6464" />
+              : <Ionicons name="trash-outline" size={20} color="#FF6464" />
+            }
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 14, fontWeight: '600', color: '#FF6464' }}>Eliminar cuenta</Text>
               <Text style={{ fontSize: 11, color: 'rgba(255,100,100,0.6)', marginTop: 2 }}>Acción irreversible — borra todos tus datos</Text>

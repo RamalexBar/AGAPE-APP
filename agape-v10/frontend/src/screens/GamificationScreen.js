@@ -71,7 +71,7 @@ export default function GamificationScreen({ navigation }) {
     return (
       <TouchableOpacity
         style={styles.rankingItem}
-        onPress={() => navigation.navigate('VerPerfil', { userId: item.id })}
+        onPress={() => navigation.navigate('VerPerfil', { perfil: item })}
       >
         <Text style={styles.rankingPos}>
           {index < 3 ? medallas[index] : `${index + 1}`}

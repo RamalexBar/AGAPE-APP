@@ -11,6 +11,7 @@ const { obtenerDevocionalDelDia, completarDevocional, obtenerHistorialDevocional
 const { obtenerMisionesDelDia, completarMision } = require('../services/dailyChallengesService');
 const { obtenerFeedCristiano, procesarSwipeConProposito } = require('../services/christianMatchingService');
 const { obtenerSuscripcion, PLANES, comprarConMonedas, TIENDA_MONEDAS } = require('../services/monetizationAgapeService');
+const swipeService = require('../services/swipeService');
 
 // ────────────────────────────────────────────────────────────────
 // PERFIL ESPIRITUAL
@@ -18,13 +19,11 @@ const { obtenerSuscripcion, PLANES, comprarConMonedas, TIENDA_MONEDAS } = requir
 
 // GET /api/spiritual/perfil
 // Mi perfil espiritual: nivel, XP, badges, racha
-router.get('/perfil', authenticateToken, async (req, res) => {
+router.get('/perfil', authenticateToken, async (req, res, next) => {
   try {
     const perfil = await obtenerPerfilEspiritual(req.user.id);
     res.json(perfil);
-  } catch (e) {
-    res.status(500).json({ error: 'Error al cargar perfil espiritual.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // GET /api/spiritual/niveles
@@ -35,7 +34,7 @@ router.get('/niveles', (req, res) => {
 
 // GET /api/spiritual/badges
 // Todos los badges disponibles con estado del usuario
-router.get('/badges', authenticateToken, async (req, res) => {
+router.get('/badges', authenticateToken, async (req, res, next) => {
   try {
     const perfil = await obtenerPerfilEspiritual(req.user.id);
     const idsObtenidos = new Set(perfil.badges.map(b => b.badge_id));
@@ -44,14 +43,12 @@ router.get('/badges', authenticateToken, async (req, res) => {
       obtenido: idsObtenidos.has(b.id),
     }));
     res.json({ badges: todos, total_obtenidos: idsObtenidos.size });
-  } catch (e) {
-    res.status(500).json({ error: 'Error al cargar badges.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // GET /api/spiritual/ranking
 // Ranking de crecimiento (no competitivo tóxico — enfocado en inspiración)
-router.get('/ranking', authenticateToken, async (req, res) => {
+router.get('/ranking', authenticateToken, async (req, res, next) => {
   try {
     const limite = parseInt(req.query.limite) || 20;
     const ranking = await obtenerRankingCrecimiento(limite);
@@ -60,9 +57,7 @@ router.get('/ranking', authenticateToken, async (req, res) => {
       mensaje: '¡Inspírate en el camino de otros creyentes! 🌟',
       semana: new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }),
     });
-  } catch (e) {
-    res.status(500).json({ error: 'Error al cargar ranking.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -71,17 +66,15 @@ router.get('/ranking', authenticateToken, async (req, res) => {
 
 // GET /api/spiritual/devocional/hoy
 // Devocional del día (versículo + reflexión + oración)
-router.get('/devocional/hoy', authenticateToken, async (req, res) => {
+router.get('/devocional/hoy', authenticateToken, async (req, res, next) => {
   try {
     const devocional = await obtenerDevocionalDelDia(req.user.id);
     res.json(devocional);
-  } catch (e) {
-    res.status(500).json({ error: 'Error al cargar devocional.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // GET /api/spiritual/devocional/hoy (sin auth — para pantalla de splash)
-router.get('/devocional/publico', async (req, res) => {
+router.get('/devocional/publico', async (req, res, next) => {
   try {
     const devocional = await obtenerDevocionalDelDia(null);
     res.json({
@@ -89,33 +82,27 @@ router.get('/devocional/publico', async (req, res) => {
       reflexion: devocional.reflexion,
       fecha: devocional.fecha,
     });
-  } catch (e) {
-    res.status(500).json({ error: 'Error.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // POST /api/spiritual/devocional/completar
 // Marcar devocional como leído → suma XP y racha
-router.post('/devocional/completar', authenticateToken, async (req, res) => {
+router.post('/devocional/completar', authenticateToken, async (req, res, next) => {
   try {
     const { versiculo_id } = req.body;
     const resultado = await completarDevocional(req.user.id, versiculo_id);
     res.json(resultado);
-  } catch (e) {
-    res.status(500).json({ error: 'Error al completar devocional.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // GET /api/spiritual/devocional/historial
 // Historial de devocionales completados
-router.get('/devocional/historial', authenticateToken, async (req, res) => {
+router.get('/devocional/historial', authenticateToken, async (req, res, next) => {
   try {
     const limite = parseInt(req.query.limite) || 30;
     const historial = await obtenerHistorialDevocional(req.user.id, limite);
     res.json({ historial });
-  } catch (e) {
-    res.status(500).json({ error: 'Error al cargar historial.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -124,24 +111,20 @@ router.get('/devocional/historial', authenticateToken, async (req, res) => {
 
 // GET /api/spiritual/misiones
 // Misiones del día + progreso
-router.get('/misiones', authenticateToken, async (req, res) => {
+router.get('/misiones', authenticateToken, async (req, res, next) => {
   try {
     const misiones = await obtenerMisionesDelDia(req.user.id);
     res.json(misiones);
-  } catch (e) {
-    res.status(500).json({ error: 'Error al cargar misiones.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // POST /api/spiritual/misiones/:misionId/completar
 // Completar una misión y recibir recompensas
-router.post('/misiones/:misionId/completar', authenticateToken, async (req, res) => {
+router.post('/misiones/:misionId/completar', authenticateToken, async (req, res, next) => {
   try {
     const resultado = await completarMision(req.user.id, req.params.misionId);
     res.json(resultado);
-  } catch (e) {
-    res.status(500).json({ error: e.message || 'Error al completar misión.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -150,7 +133,7 @@ router.post('/misiones/:misionId/completar', authenticateToken, async (req, res)
 
 // GET /api/spiritual/feed
 // Feed de perfiles compatible espiritualmente
-router.get('/feed', authenticateToken, async (req, res) => {
+router.get('/feed', authenticateToken, async (req, res, next) => {
   try {
     const opciones = {
       limite: parseInt(req.query.limite) || 20,
@@ -161,25 +144,34 @@ router.get('/feed', authenticateToken, async (req, res) => {
     };
     const perfiles = await obtenerFeedCristiano(req.user.id, opciones);
     res.json({ perfiles, total: perfiles.length });
-  } catch (e) {
-    res.status(500).json({ error: 'Error al cargar feed.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // POST /api/spiritual/swipe
 // Swipe con propósito (connect/pass + tipo de conexión)
-router.post('/swipe', authenticateToken, async (req, res) => {
+router.post('/swipe', authenticateToken, async (req, res, next) => {
   try {
     const { to_user_id, accion, tipo_proposito = 'friendship' } = req.body;
     if (!to_user_id || !accion) return res.status(400).json({ error: 'Faltan campos.' });
 
+    // 'connect' cuenta contra el límite diario de swipes, igual que POST /api/like.
+    if (accion === 'connect') {
+      const check = await swipeService.verificarSwipe(req.user.id);
+      if (!check.permitido) {
+        return res.status(429).json({ success: false, limitAlcanzado: true, ...check });
+      }
+    }
+
     const resultado = await procesarSwipeConProposito(
       req.user.id, to_user_id, accion, tipo_proposito
     );
+
+    if (accion === 'connect') {
+      await swipeService.incrementarSwipe(req.user.id);
+    }
+
     res.json(resultado);
-  } catch (e) {
-    res.status(500).json({ error: e.message || 'Error al procesar swipe.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -188,13 +180,11 @@ router.post('/swipe', authenticateToken, async (req, res) => {
 
 // GET /api/spiritual/suscripcion
 // Estado de suscripción, plan activo, monedas de fe
-router.get('/suscripcion', authenticateToken, async (req, res) => {
+router.get('/suscripcion', authenticateToken, async (req, res, next) => {
   try {
     const subs = await obtenerSuscripcion(req.user.id);
     res.json(subs);
-  } catch (e) {
-    res.status(500).json({ error: 'Error al cargar suscripción.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // GET /api/spiritual/planes
@@ -205,29 +195,25 @@ router.get('/planes', (req, res) => {
 
 // GET /api/spiritual/tienda
 // Tienda de monedas de fe
-router.get('/tienda', authenticateToken, async (req, res) => {
+router.get('/tienda', authenticateToken, async (req, res, next) => {
   try {
     const subs = await obtenerSuscripcion(req.user.id);
     res.json({
       monedas_actuales: subs.monedas_fe,
       items: Object.values(TIENDA_MONEDAS),
     });
-  } catch (e) {
-    res.status(500).json({ error: 'Error.' });
-  }
+  } catch (e) { next(e); }
 });
 
 // POST /api/spiritual/tienda/comprar
 // Comprar item con monedas de fe
-router.post('/tienda/comprar', authenticateToken, async (req, res) => {
+router.post('/tienda/comprar', authenticateToken, async (req, res, next) => {
   try {
     const { item_id } = req.body;
     if (!item_id) return res.status(400).json({ error: 'item_id requerido.' });
     const resultado = await comprarConMonedas(req.user.id, item_id);
     res.json(resultado);
-  } catch (e) {
-    res.status(400).json({ error: e.message || 'Error al comprar.' });
-  }
+  } catch (e) { next(e); }
 });
 
 module.exports = router;
