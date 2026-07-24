@@ -53,6 +53,8 @@ router.put('/me', authenticateToken,
   body('nivel_compromiso').optional().isIn(COMPROMISO_VALIDO),
   body('frecuencia_iglesia').optional().isIn(FRECUENCIA_IG_VALIDA),
   body('valores').optional().isArray(),
+  body('intereses').optional().isArray({ max: 8 }),
+  body('busca_genero').optional().isIn(['hombres', 'mujeres', 'todos']),
   validate,
   async (req, res, next) => {
     try { res.json(await profileService.updateProfile(req.user.id, req.body)); }
@@ -158,22 +160,35 @@ router.post('/me/invisible', authenticateToken, async (req, res, next) => {
 // GET /api/profiles/active
 router.get('/active', authenticateToken, async (req, res, next) => {
   try {
+    const db = require('../config/supabase');
     const hace = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-    const { data, error } = await require('../config/supabase')
-      .from('users')
-      .select('id, nombre, edad, bio, ubicacion_ciudad, last_active_at, profiles(fotos, intereses)')
-      .gt('last_active_at', hace)
-      .neq('id', req.user.id)
-      .limit(50);
+
+    const [{ data, error }, { data: bloqueados }] = await Promise.all([
+      db.from('users')
+        .select('id, nombre, edad, bio, ubicacion_ciudad, last_active_at, profiles(fotos, intereses, modo_invisible)')
+        .gt('last_active_at', hace)
+        .neq('id', req.user.id)
+        .limit(50),
+      db.from('blocked_users')
+        .select('blocker_id, blocked_id')
+        .or(`blocker_id.eq.${req.user.id},blocked_id.eq.${req.user.id}`),
+    ]);
     if (error) throw error;
-    const perfiles = (data || []).map(u => ({
-      id: u.id,
-      nombre: u.nombre,
-      edad: u.edad,
-      ciudad: u.ubicacion_ciudad,
-      ultima_actividad: u.last_active_at,
-      profiles: { fotos: u.profiles?.fotos || [], bio: u.bio, intereses: u.profiles?.intereses || [] },
-    }));
+
+    const idsExcluidos = new Set(
+      (bloqueados || []).map(b => (b.blocker_id === req.user.id ? b.blocked_id : b.blocker_id))
+    );
+
+    const perfiles = (data || [])
+      .filter(u => !idsExcluidos.has(u.id) && !u.profiles?.modo_invisible)
+      .map(u => ({
+        id: u.id,
+        nombre: u.nombre,
+        edad: u.edad,
+        ciudad: u.ubicacion_ciudad,
+        ultima_actividad: u.last_active_at,
+        profiles: { fotos: u.profiles?.fotos || [], bio: u.bio, intereses: u.profiles?.intereses || [] },
+      }));
     res.json({ perfiles, total: perfiles.length });
   } catch (e) { next(e); }
 });

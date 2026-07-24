@@ -27,6 +27,7 @@ export default function ChatScreen({ route, navigation }) {
   const [cargando,        setCargando]       = useState(true);
   const [otroEscribiendo, setOtroEscribiendo]= useState(false);
   const [enviando,        setEnviando]       = useState(false);
+  const [leidoHasta,      setLeidoHasta]     = useState(null);
 
   const flatRef           = useRef(null);
   const escribiendoTimer  = useRef(null);
@@ -49,11 +50,15 @@ export default function ChatScreen({ route, navigation }) {
       setMensajesMatch(match.match_id, hist || []);
       setCargando(false);
       setTimeout(() => flatRef.current?.scrollToEnd({ animated: false }), 100);
+      socket.emit('mark_read', { match_id: match.match_id });
     });
 
     socket.on('nuevo_mensaje', (msg) => {
       agregarMensaje(match.match_id, msg);
       setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 80);
+      if (msg.sender_id !== user?.id) {
+        socket.emit('mark_read', { match_id: match.match_id });
+      }
     });
 
     socket.on('usuario_escribiendo', ({ user_id }) => {
@@ -61,6 +66,12 @@ export default function ChatScreen({ route, navigation }) {
     });
 
     socket.on('usuario_dejo_escribir', () => setOtroEscribiendo(false));
+
+    socket.on('messages_read', ({ match_id, read_by, read_at }) => {
+      if (match_id === match.match_id && read_by !== user?.id) {
+        setLeidoHasta(read_at);
+      }
+    });
 
     // Fallback: cargar mensajes via REST si socket no responde
     const fallbackTimer = setTimeout(async () => {
@@ -79,6 +90,7 @@ export default function ChatScreen({ route, navigation }) {
       socket.off('nuevo_mensaje');
       socket.off('usuario_escribiendo');
       socket.off('usuario_dejo_escribir');
+      socket.off('messages_read');
     };
   }, [match.match_id]);
 
@@ -117,6 +129,8 @@ export default function ChatScreen({ route, navigation }) {
     const hora   = formatearHoraMensaje(item.created_at || item.timestamp);
     const prevMsg = mensajes[index - 1];
     const mismoRemitente = prevMsg && (prevMsg.sender_id || prevMsg.remitente_id) === (item.sender_id || item.remitente_id);
+    const esUltimoMio = esMio && index === mensajes.length - 1;
+    const fueLeido = esUltimoMio && leidoHasta && new Date(leidoHasta) >= new Date(item.created_at || item.timestamp);
 
     return (
       <View style={[
@@ -138,7 +152,7 @@ export default function ChatScreen({ route, navigation }) {
           <Text style={[styles.burbujaTexto, esMio && styles.burbujaTextoMio]}>
             {item.contenido || item.content}
           </Text>
-          <Text style={[styles.hora, esMio && styles.horaMia]}>{hora}</Text>
+          <Text style={[styles.hora, esMio && styles.horaMia]}>{hora}{fueLeido ? ' · Leído' : ''}</Text>
         </View>
       </View>
     );

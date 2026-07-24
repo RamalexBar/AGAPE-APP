@@ -16,6 +16,7 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useStore from '../store/useStore';
 import { profileAPI } from '../services/api';
+import { validarFechaNacimiento } from '../utils/helpers';
 
 const INTERESES_LISTA = [
   '🎵 Música', '📚 Lectura', '🏋️ Gym', '🎮 Videojuegos',
@@ -35,6 +36,7 @@ export default function RegisterScreen({ navigation }) {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fechaNacimiento, setFechaNacimiento] = useState('');
   const [esMayor18, setEsMayor18] = useState(false);
   const [genero, setGenero] = useState('');
 
@@ -80,6 +82,8 @@ const validarPaso1 = () => {
     if (!email.includes('@')) return 'Correo invalido.';
     if (password.length < 8) return 'Contrasena minimo 8 caracteres.';
     if (!genero) return 'Selecciona tu genero.';
+    const errorFecha = validarFechaNacimiento(fechaNacimiento.trim());
+    if (errorFecha) return errorFecha;
     if (!esMayor18) return 'Debes confirmar que eres mayor de 18 anos.';
     if (!aceptoTerminos) return 'Debes aceptar los Terminos y la Politica de Privacidad.';
     return null;
@@ -108,7 +112,7 @@ const validarPaso1 = () => {
         nombre: nombre.trim(),
         email: email.trim().toLowerCase(),
         password,
-        fecha_nacimiento: '2000-01-01',
+        fecha_nacimiento: fechaNacimiento.trim(),
         genero: generoBackend,
         accepted_terms: 'true',
         accepted_privacy: 'true',
@@ -124,12 +128,21 @@ const validarPaso1 = () => {
         }
       }
 
-      // Actualizar perfil con intereses y bio
+      // "tipo_relacion" no existe como campo en el backend — se traduce a
+      // los dos campos que sí entiende: connection_purpose e intencion_relacion.
+      const MAPA_RELACION = {
+        amistad:    { connection_purpose: 'friendship', intencion_relacion: 'amistad' },
+        citas:      { connection_purpose: 'friendship', intencion_relacion: 'noviazgo_cristiano' },
+        relacion:   { connection_purpose: 'marriage',   intencion_relacion: 'matrimonio' },
+        cualquiera: { connection_purpose: 'friendship', intencion_relacion: 'amistad' },
+      };
+
+      // Actualizar perfil con intereses, bio y preferencias
       await profileAPI.updateProfile({
         bio,
         intereses: interesesSeleccionados,
         busca_genero: buscaGenero,
-        tipo_relacion: buscaRelacion,
+        ...(MAPA_RELACION[buscaRelacion] || {}),
       });
 
     } catch (error) {
@@ -160,6 +173,7 @@ const validarPaso1 = () => {
       <Campo icono="person-outline" placeholder="Tu nombre" value={nombre} onChange={setNombre} />
       <Campo icono="mail-outline" placeholder="Correo electrónico" value={email} onChange={setEmail} tipo="email-address" />
       <Campo icono="lock-closed-outline" placeholder="Contraseña (mín. 8 caracteres)" value={password} onChange={setPassword} seguro />
+      <Campo icono="calendar-outline" placeholder="Fecha de nacimiento (AAAA-MM-DD)" value={fechaNacimiento} onChange={setFechaNacimiento} tipo="numeric" />
       <TouchableOpacity style={styles.filaTerminos} onPress={() => setEsMayor18(!esMayor18)}>
         <View style={[styles.checkbox, esMayor18 && styles.checkboxActivo]}>
           {esMayor18 && <Ionicons name="checkmark" size={14} color="#fff" />}

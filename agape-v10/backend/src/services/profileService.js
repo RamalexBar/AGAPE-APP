@@ -5,6 +5,7 @@ const CAMPOS_PUBLICOS = [
   'nombre', 'bio', 'avatar_url', 'ubicacion_ciudad',
   'denomination', 'connection_purpose', 'valores', 'spiritual_habits',
   'intencion_relacion', 'nivel_compromiso', 'frecuencia_iglesia', 'fecha_nacimiento',
+  'busca_genero',
 ];
 
 const getProfile = async (userId) => {
@@ -19,20 +20,48 @@ const getProfile = async (userId) => {
 const getMyProfile = async (userId) => {
   const { data, error } = await supabase
     .from('users')
-    .select('id, nombre, email, edad, avatar_url, bio, ubicacion_ciudad, genero, denomination, connection_purpose, valores, spiritual_habits, intencion_relacion, nivel_compromiso, frecuencia_iglesia, is_verified, is_faith_verified, last_active_at, created_at, spiritual_profiles(total_xp, nivel, racha_devocional, monedas_fe, total_devocionales), profiles(fotos, intereses)')
+    .select('id, nombre, email, edad, avatar_url, bio, ubicacion_ciudad, genero, busca_genero, denomination, connection_purpose, valores, spiritual_habits, intencion_relacion, nivel_compromiso, frecuencia_iglesia, is_verified, is_faith_verified, last_active_at, created_at, spiritual_profiles(total_xp, nivel, racha_devocional, monedas_fe, total_devocionales), profiles(fotos, intereses)')
     .eq('id', userId).single();
   if (error || !data) throw Object.assign(new Error('Perfil no encontrado.'), { status: 404 });
+
+  // El estado de suscripción vive en su propio servicio (subscriptions +
+  // webhooks de Stripe/Apple/Google/LemonSqueezy) — se fusiona aquí para
+  // que el frontend (que lee user.premium / user.subscription_type en
+  // decenas de pantallas) siempre refleje el plan real y no se quede
+  // "atascado" en free tras una compra exitosa.
+  try {
+    const { obtenerSuscripcion } = require('./monetizationAgapeService');
+    const sub = await obtenerSuscripcion(userId);
+    data.premium = sub.es_premium;
+    data.subscription_type = sub.plan_id;
+    data.coins_balance = sub.monedas_fe;
+  } catch {
+    data.premium = false;
+    data.subscription_type = 'free';
+  }
+
   return data;
 };
 
 const updateProfile = async (userId, campos) => {
   const update = {};
   for (const key of CAMPOS_PUBLICOS) { if (campos[key] !== undefined) update[key] = campos[key]; }
-  if (!Object.keys(update).length) throw Object.assign(new Error('Sin campos válidos.'), { status: 400 });
+
+  // Los intereses viven en la tabla `profiles`, no en `users`.
+  if (Array.isArray(campos.intereses)) {
+    await supabase.from('profiles')
+      .upsert({ user_id: userId, intereses: campos.intereses }, { onConflict: 'user_id' })
+      .catch(() => {});
+  }
+
+  if (!Object.keys(update).length) {
+    if (Array.isArray(campos.intereses)) return { success: true };
+    throw Object.assign(new Error('Sin campos válidos.'), { status: 400 });
+  }
   update.updated_at = new Date().toISOString();
 
   const { data, error } = await supabase.from('users').update(update).eq('id', userId)
-    .select('id, nombre, bio, avatar_url, ubicacion_ciudad, denomination, connection_purpose, intencion_relacion, nivel_compromiso, frecuencia_iglesia').single();
+    .select('id, nombre, bio, avatar_url, ubicacion_ciudad, denomination, connection_purpose, intencion_relacion, nivel_compromiso, frecuencia_iglesia, busca_genero').single();
   if (error) throw Object.assign(new Error('Error al actualizar perfil.'), { status: 500 });
   return data;
 };
@@ -46,7 +75,6 @@ const updatePhotos = async (userId, fotos) => {
 
 const calcularCompletitud = (perfil) => {
   const campos = [
-    { key: 'avatar_url',         peso: 20, label: 'Foto de perfil' },
     { key: 'bio',                peso: 15, label: 'Descripción personal' },
     { key: 'denomination',       peso: 10, label: 'Denominación' },
     { key: 'connection_purpose', peso: 15, label: 'Propósito de conexión' },
@@ -55,6 +83,12 @@ const calcularCompletitud = (perfil) => {
     { key: 'valores',            peso: 15, label: 'Valores personales' },
   ];
   let total = 0; const faltantes = [];
+
+  // Las fotos viven en profiles.fotos (subidas via /me/photos), no en
+  // users.avatar_url, que nunca se rellena desde la app.
+  const tieneFoto = (perfil.profiles?.fotos || []).length > 0;
+  if (tieneFoto) total += 20; else faltantes.push('Foto de perfil');
+
   campos.forEach(({ key, peso, label }) => {
     const v = perfil[key]; const ok = v && (Array.isArray(v) ? v.length > 0 : String(v).length > 0);
     if (ok) total += peso; else faltantes.push(label);

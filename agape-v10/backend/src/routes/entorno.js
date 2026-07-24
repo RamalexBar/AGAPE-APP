@@ -8,6 +8,7 @@ const { validate } = require('../middlewares/validate');
 const { authenticateToken } = require('../middlewares/auth');
 const supabase = require('../config/supabase');
 const chatService = require('../services/chatService');
+const { calcularEstado } = require('../services/presenceService');
 
 // Fórmula de Haversine — distancia en km entre 2 coordenadas
 function distanciaKm(lat1, lon1, lat2, lon2) {
@@ -60,10 +61,10 @@ router.get('/cercanos',
         });
       }
 
-      const [{ data: candidatos, error }, { data: bloqueados }] = await Promise.all([
+      const [{ data: candidatos, error }, { data: bloqueados }, { data: invisibles }] = await Promise.all([
         supabase
           .from('users')
-          .select('id, nombre, avatar_url, ubicacion_ciudad, ubicacion_lat, ubicacion_lon, last_active_at')
+          .select('id, nombre, edad, bio, avatar_url, ubicacion_ciudad, ubicacion_lat, ubicacion_lon, last_active_at')
           .eq('is_active', true)
           .eq('is_banned', false)
           .not('ubicacion_lat', 'is', null)
@@ -74,13 +75,18 @@ router.get('/cercanos',
           .from('blocked_users')
           .select('blocker_id, blocked_id')
           .or(`blocker_id.eq.${req.user.id},blocked_id.eq.${req.user.id}`),
+        supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('modo_invisible', true),
       ]);
 
       if (error) throw Object.assign(new Error('Error al buscar personas cercanas.'), { status: 500 });
 
-      const idsExcluidos = new Set(
-        (bloqueados || []).map(b => (b.blocker_id === req.user.id ? b.blocked_id : b.blocker_id))
-      );
+      const idsExcluidos = new Set([
+        ...(bloqueados || []).map(b => (b.blocker_id === req.user.id ? b.blocked_id : b.blocker_id)),
+        ...(invisibles || []).map(p => p.user_id),
+      ]);
 
       const conDistancia = (candidatos || [])
         .filter(c => !idsExcluidos.has(c.id))
@@ -101,10 +107,13 @@ router.get('/cercanos',
       const usuarios = conDistancia.map(c => ({
         user_id: c.id,
         nombre: c.nombre,
+        edad: c.edad,
+        bio: c.bio,
         avatar_url: c.avatar_url,
         ciudad: c.ubicacion_ciudad,
         distancia_km: c.distancia_km,
         fotos: fotosPorUsuario.get(c.id) || [],
+        is_online: calcularEstado(c.last_active_at).online,
       }));
 
       res.json({ usuarios, total: usuarios.length });

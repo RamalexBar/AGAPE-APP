@@ -79,22 +79,28 @@ const obtenerFeedCristiano = async (userId, opciones = {}) => {
 
   const { data: yo } = await supabase
     .from('users')
-    .select('id, nivel, connection_purpose, denomination, spiritual_habits, valores, last_active_at, profiles(intereses)')
+    .select('id, nivel, genero, busca_genero, connection_purpose, denomination, spiritual_habits, valores, last_active_at, profiles(intereses)')
     .eq('id', userId).single();
 
   if (!yo) throw new Error('Perfil no encontrado');
   yo.intereses = yo.profiles?.intereses || [];
 
-  const [{ data: yaVistos }, { data: bloqueados }] = await Promise.all([
+  const [{ data: yaVistos }, { data: bloqueados }, { data: invisibles }] = await Promise.all([
     supabase.from('swipes').select('to_user_id').eq('from_user_id', userId),
     supabase.from('blocked_users').select('blocked_id').eq('blocker_id', userId),
+    supabase.from('profiles').select('user_id').eq('modo_invisible', true),
   ]);
-const excluir = new Set([userId, ...(yaVistos||[]).map(s=>s.to_user_id), ...(bloqueados||[]).map(b=>b.blocked_id)]);
+const excluir = new Set([
+  userId,
+  ...(yaVistos||[]).map(s=>s.to_user_id),
+  ...(bloqueados||[]).map(b=>b.blocked_id),
+  ...(invisibles||[]).map(p=>p.user_id),
+]);
   const excStr = [...excluir].join(',') || "'00000000-0000-0000-0000-000000000000'";
 
   let q = supabase
     .from('users')
-    .select('id, nombre, edad, avatar_url, bio, ubicacion_ciudad, nivel, connection_purpose, denomination, spiritual_habits, valores, last_active_at, is_verified, is_faith_verified, spiritual_profiles(total_xp, nivel, racha_devocional)')
+    .select('id, nombre, edad, genero, busca_genero, avatar_url, bio, ubicacion_ciudad, nivel, connection_purpose, denomination, spiritual_habits, valores, last_active_at, is_verified, is_faith_verified, spiritual_profiles(total_xp, nivel, racha_devocional)')
     .eq('is_active', true).eq('is_banned', false)
     .not('id', 'in', `(${excStr})`);
 
@@ -103,7 +109,20 @@ const excluir = new Set([userId, ...(yaVistos||[]).map(s=>s.to_user_id), ...(blo
   if (filtro_proposito) q = q.eq('connection_purpose', filtro_proposito);
   if (filtro_denominacion) q = q.eq('denomination', filtro_denominacion);
 
-  const { data: candidatos } = await q.limit(200);
+  // Filtro de género mutuo: solo se muestran perfiles del género que busco,
+  // y que a su vez busquen el mío (si alguno de los dos no expresó
+  // preferencia, se asume 'todos' — comportamiento por defecto).
+  const generoCoincide = (miGenero, buscaGeneroOtro) => {
+    if (!buscaGeneroOtro || buscaGeneroOtro === 'todos') return true;
+    if (buscaGeneroOtro === 'hombres') return miGenero === 'M';
+    if (buscaGeneroOtro === 'mujeres') return miGenero === 'F';
+    return true;
+  };
+
+  const { data: candidatosCrudos } = await q.limit(200);
+  const candidatos = (candidatosCrudos || []).filter(c =>
+    generoCoincide(c.genero, yo.busca_genero) && generoCoincide(yo.genero, c.busca_genero)
+  );
   if (!candidatos?.length) return [];
 
   const { data: perfilesFotos } = await supabase
@@ -136,28 +155,45 @@ const excluir = new Set([userId, ...(yaVistos||[]).map(s=>s.to_user_id), ...(blo
 const procesarSwipeConProposito = async (fromUserId, toUserId, accion, tipoProposito = 'friendship') => {
   const { error } = await supabase.from('swipes').upsert({ from_user_id: fromUserId, to_user_id: toUserId, action: accion, connection_type: tipoProposito });
   if (error) throw error;
-  if (accion !== 'connect') return { es_conexion: false };
+  if (accion !== 'connect') return { es_conexion: false, es_match: false };
 
   const { data: fromUser } = await supabase.from('users').select('nombre, avatar_url').eq('id', fromUserId).single();
   notificationService.notificarNuevoLike(toUserId, { nombreDe: fromUser?.nombre||'Alguien' }).catch(()=>{});
 
   const { data: inverso } = await supabase.from('swipes').select('id').eq('from_user_id', toUserId).eq('to_user_id', fromUserId).eq('action', 'connect').single();
-  if (!inverso) return { es_conexion: false };
+  if (!inverso) return { es_conexion: false, es_match: false };
 
   const { data: conexion } = await supabase.from('connections')
     .insert({ user_id_1: fromUserId, user_id_2: toUserId, status: 'connected', connection_type: tipoProposito, initiated_by: fromUserId, connected_at: new Date().toISOString() })
     .select().single();
 
-  const { data: usuarios } = await supabase.from('users').select('id, nombre, avatar_url').in('id', [fromUserId, toUserId]);
+  const [{ data: usuariosCrudos }, { data: perfilesFotos }] = await Promise.all([
+    supabase.from('users').select('id, nombre, avatar_url, is_verified').in('id', [fromUserId, toUserId]),
+    supabase.from('profiles').select('user_id, fotos').in('user_id', [fromUserId, toUserId]),
+  ]);
+  const fotosPorUsuario = new Map((perfilesFotos || []).map(p => [p.user_id, p.fotos || []]));
+  const usuarios = (usuariosCrudos || []).map(u => ({ ...u, profiles: { fotos: fotosPorUsuario.get(u.id) || [] } }));
+
+  // El frontend (MatchModal, ChatScreen) espera { match_id, usuario } —
+  // se arma una vista distinta para cada lado del match.
+  const construirMatch = (paraUserId) => ({
+    match_id: conexion.id,
+    connection_type: tipoProposito,
+    connected_at: conexion.connected_at,
+    usuario: usuarios.find(u => u.id !== paraUserId),
+  });
+
   const resultado = {
-    es_conexion: true, conexion, usuarios,
+    es_conexion: true, es_match: true,
+    conexion, usuarios,
+    match: construirMatch(fromUserId),
     mensaje: getMensajeMatch(tipoProposito),
     tipo: tipoProposito
   };
 
   if (global.io) {
-    global.io.to(`user_${fromUserId}`).emit('new_match', resultado);
-    global.io.to(`user_${toUserId}`).emit('new_match', resultado);
+    global.io.to(`user_${fromUserId}`).emit('new_match', { ...resultado, match: construirMatch(fromUserId) });
+    global.io.to(`user_${toUserId}`).emit('new_match', { ...resultado, match: construirMatch(toUserId) });
   }
 
   const otro = usuarios?.find(u=>u.id!==fromUserId);

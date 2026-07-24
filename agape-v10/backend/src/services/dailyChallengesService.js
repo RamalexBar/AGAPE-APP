@@ -30,8 +30,9 @@ const MISIONES = {
 const obtenerMisionesDelDia = async (userId) => {
   try {
     const hoy = new Date().toISOString().split('T')[0];
+    const haceUnaSemana = new Date(Date.now() - 7 * 86400000).toISOString();
 
-    // Misiones ya completadas hoy
+    // Misiones diarias ya completadas hoy
     const { data: completadas } = await supabase
       .from('mission_completions')
       .select('mission_id, completed_at')
@@ -39,6 +40,18 @@ const obtenerMisionesDelDia = async (userId) => {
       .gte('completed_at', `${hoy}T00:00:00`)
       .lte('completed_at', `${hoy}T23:59:59`);
     const completadasIds = new Set(completadas?.map(c => c.mission_id) || []);
+
+    // Misiones semanales ya completadas en los últimos 7 días —
+    // antes se comparaban contra `completadasIds` (solo hoy), lo que
+    // hacía que una misión semanal completada ayer volviera a mostrarse
+    // como pendiente cada día.
+    const { data: completadasSemana } = await supabase
+      .from('mission_completions')
+      .select('mission_id')
+      .eq('user_id', userId)
+      .gte('completed_at', haceUnaSemana)
+      .in('mission_id', Object.values(MISIONES).filter(m => m.tipo === 'semanal').map(m => m.id));
+    const completadasSemanaIds = new Set(completadasSemana?.map(c => c.mission_id) || []);
 
     // Misiones especiales ya completadas (lifetime)
     const { data: especiales } = await supabase
@@ -54,7 +67,7 @@ const obtenerMisionesDelDia = async (userId) => {
 
     const misionesSemanales = Object.values(MISIONES)
       .filter(m => m.tipo === 'semanal')
-      .map(m => ({ ...m, completada: completadasIds.has(m.id) }));
+      .map(m => ({ ...m, completada: completadasSemanaIds.has(m.id) }));
 
     const misionesEspeciales = Object.values(MISIONES)
       .filter(m => m.tipo === 'especial')
@@ -84,7 +97,8 @@ const completarMision = async (userId, misionId) => {
 
     const hoy = new Date().toISOString().split('T')[0];
 
-    // Verificar si ya fue completada (hoy para diarias, siempre para especiales)
+    // Verificar si ya fue completada (hoy para diarias, esta semana para
+    // semanales, siempre para especiales)
     const query = supabase
       .from('mission_completions')
       .select('id')
@@ -93,6 +107,8 @@ const completarMision = async (userId, misionId) => {
 
     if (mision.tipo === 'diaria') {
       query.gte('completed_at', `${hoy}T00:00:00`);
+    } else if (mision.tipo === 'semanal') {
+      query.gte('completed_at', new Date(Date.now() - 7 * 86400000).toISOString());
     }
 
     const { data: existente } = await query.single();

@@ -45,9 +45,9 @@ export default function MatchesScreen({ navigation }) {
   useEffect(() => { cargar(); resetearNoLeidos(); }, []);
 
   const renderMatch = ({ item }) => {
-    const otro  = item.user1_id === user?.id ? item.user2 : item.user1;
-    const foto  = otro?.profiles?.fotos?.[0];
-    const nombre= otro?.profiles?.nombre || otro?.nombre || 'Usuario';
+    const otro  = item.usuario;
+    const foto  = otro?.profiles?.fotos?.[0] || otro?.avatar_url;
+    const nombre= otro?.nombre || 'Usuario';
     const ultimo= item.ultimo_mensaje;
     const esNuevo = !item.ultimo_mensaje;
     const iniciales= obtenerIniciales(nombre);

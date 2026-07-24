@@ -1,6 +1,6 @@
 // ================================================
-// �GAPE v10 � Login Screen (Producci�n)
-// Dise�o profesional, validaciones mejoradas
+// ÁGAPE v10 — Login Screen (Producción)
+// Diseño profesional, validaciones mejoradas
 // ================================================
 import React, { useState } from 'react';
 import {
@@ -86,11 +86,11 @@ export default function LoginScreen({ navigation }) {
   const handleLogin = async () => {
     const emailTrimmed = email.trim().toLowerCase();
     if (!emailTrimmed || !password) {
-      Alert.alert('Campos requeridos', 'Ingresa tu correo y contrase�a.');
+      Alert.alert('Campos requeridos', 'Ingresa tu correo y contraseña.');
       return;
     }
     if (!esEmailValido(emailTrimmed)) {
-      Alert.alert('Correo inv�lido', 'Verifica el formato de tu correo.');
+      Alert.alert('Correo inválido', 'Verifica el formato de tu correo.');
       return;
     }
     try {
@@ -98,7 +98,7 @@ export default function LoginScreen({ navigation }) {
       await login(emailTrimmed, password);
     } catch (error) {
       const msg = error.response?.data?.error?.message
-        || 'Error al iniciar sesi�n. Verifica tus datos.';
+        || 'Error al iniciar sesión. Verifica tus datos.';
       Alert.alert('Error', msg);
     } finally {
       setCargando(false);
@@ -119,8 +119,8 @@ export default function LoginScreen({ navigation }) {
           {/* -- Logo -- */}
           <View style={styles.logoContenedor}>
             <AgapeLogo size={92} />
-            <Text style={styles.logoTexto}>�GAPE</Text>
-            <Text style={styles.logoSubtitulo}>Conexiones con prop�sito y fe</Text>
+            <Text style={styles.logoTexto}>ÁGAPE</Text>
+            <Text style={styles.logoSubtitulo}>Conexiones con propósito y fe</Text>
           </View>
 
           {/* -- Formulario -- */}
@@ -132,7 +132,7 @@ export default function LoginScreen({ navigation }) {
               <Ionicons name="mail-outline" size={18} color={COLORES.muted} style={styles.campoIco} />
               <TextInput
                 style={styles.campoInput}
-                placeholder="Correo electr�nico"
+                placeholder="Correo electrónico"
                 placeholderTextColor={COLORES.muted}
                 value={email}
                 onChangeText={setEmail}
@@ -143,12 +143,12 @@ export default function LoginScreen({ navigation }) {
               />
             </View>
 
-            {/* Contrase�a */}
+            {/* Contraseña */}
             <View style={styles.campo}>
               <Ionicons name="lock-closed-outline" size={18} color={COLORES.muted} style={styles.campoIco} />
               <TextInput
                 style={[styles.campoInput, { flex: 1 }]}
-                placeholder="Contrase�a"
+                placeholder="Contraseña"
                 placeholderTextColor={COLORES.muted}
                 value={password}
                 onChangeText={setPassword}
@@ -163,15 +163,15 @@ export default function LoginScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            {/* Olvid� contrase�a */}
+            {/* Olvidé contraseña */}
             <TouchableOpacity
               onPress={() => navigation.navigate('OlvideContrasena')}
               style={styles.olvidaste}
             >
-              <Text style={styles.olvidasteTexto}>�Olvidaste tu contrase�a?</Text>
+              <Text style={styles.olvidasteTexto}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
 
-            {/* Bot�n login */}
+            {/* Botón login */}
             <TouchableOpacity onPress={handleLogin} disabled={cargando} activeOpacity={0.88}>
               <LinearGradient
                 colors={COLORES.gradPrimario}
@@ -180,7 +180,7 @@ export default function LoginScreen({ navigation }) {
               >
                 {cargando
                   ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.btnLoginTexto}>Iniciar sesi�n</Text>
+                  : <Text style={styles.btnLoginTexto}>Iniciar sesión</Text>
                 }
               </LinearGradient>
             </TouchableOpacity>
@@ -216,7 +216,7 @@ export default function LoginScreen({ navigation }) {
           <TouchableOpacity onPress={() => navigation.navigate('Legal')} style={styles.legal}>
             <Text style={styles.legalTexto}>
               Al continuar aceptas nuestros{' '}
-              <Text style={styles.legalLink}>T�rminos</Text>
+              <Text style={styles.legalLink}>Términos</Text>
               {' '}y{' '}
               <Text style={styles.legalLink}>Privacidad</Text>
             </Text>

@@ -64,10 +64,12 @@ const deleteAccountPermanently = async (userId) => {
       .or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
     if (r7.error) logger.error({ err: r7.error, userId }, '[ACCOUNT_DELETION] Error borrando bloqueos');
 
-    // 8. Borrar referidos
-    const r8 = await supabase.from('referrals').delete()
-      .or(`referrer_id.eq.${userId},referred_id.eq.${userId}`);
-    if (r8.error) logger.error({ err: r8.error, userId }, '[ACCOUNT_DELETION] Error borrando referidos');
+    // 8. Borrar referidos (código propio + usos donde participó como referente o referido)
+    const r8a = await supabase.from('referral_uses').delete()
+      .or(`referrer_id.eq.${userId},referred_user_id.eq.${userId}`);
+    if (r8a.error) logger.error({ err: r8a.error, userId }, '[ACCOUNT_DELETION] Error borrando usos de referido');
+    const r8b = await supabase.from('referral_codes').delete().eq('user_id', userId);
+    if (r8b.error) logger.error({ err: r8b.error, userId }, '[ACCOUNT_DELETION] Error borrando código de referido');
 
     // 9. Borrar fila de perfil (fotos/intereses)
     const r9 = await supabase.from('profiles').delete().eq('user_id', userId);

@@ -13,6 +13,7 @@ import useNotifications from '../hooks/useNotifications';
 import { COLORES } from '../utils/constants';
 import { conectarSocket, desconectarSocket, getSocket } from '../services/socketService';
 import { navigationRef, navegarGlobal } from './navigationRef';
+import MatchModal from '../components/MatchModal';
 
 // Auth
 import LoginScreen    from '../screens/LoginScreen';
@@ -33,6 +34,7 @@ import VerificationScreen from '../screens/VerificationScreen';
 import EventsScreen      from '../screens/EventsScreen';
 import VideoCallScreen   from '../screens/VideoCallScreen';
 import GamificationScreen from '../screens/GamificationScreen';
+import DevocionalScreen  from '../screens/DevocionalScreen';
 import LegalScreen       from '../screens/LegalScreen';
 import PremiumScreen     from '../screens/PremiumScreen';
 
@@ -92,7 +94,7 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
-  const { isAuthenticated, isLoading, inicializar } = useStore();
+  const { isAuthenticated, isLoading, inicializar, setNuevoMatch } = useStore();
   useNotifications();
 
   useEffect(() => { inicializar(); }, []);
@@ -112,11 +114,17 @@ export default function AppNavigator() {
       socket.on('videocall_incoming', (data) => {
         navegarGlobal('Videollamada', { llamada_entrante: data });
       });
+      // Se registra a nivel global (no solo en HomeScreen) para que el match
+      // aparezca aunque el usuario esté en otra pantalla cuando le hacen match.
+      socket.on('new_match', (data) => {
+        if (data?.match) setNuevoMatch(data.match);
+      });
     });
 
     return () => {
       activo = false;
       getSocket()?.off('videocall_incoming');
+      getSocket()?.off('new_match');
     };
   }, [isAuthenticated]);
 
@@ -130,6 +138,9 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer ref={navigationRef}>
+      {isAuthenticated && (
+        <MatchModal onVerChat={(match) => navegarGlobal('Chat', { match, usuario: match.usuario })} />
+      )}
       <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
         {!isAuthenticated ? (
           <>
@@ -148,6 +159,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Verificacion"  component={VerificationScreen} />
             <Stack.Screen name="Eventos"       component={EventsScreen} />
             <Stack.Screen name="Logros"        component={GamificationScreen} />
+            <Stack.Screen name="Devocional"    component={DevocionalScreen} options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="Premium"       component={PremiumScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
             <Stack.Screen name="Legal"         component={LegalScreen} />
             <Stack.Screen name="Videollamada"  component={VideoCallScreen} options={{ presentation: 'fullScreenModal' }} />

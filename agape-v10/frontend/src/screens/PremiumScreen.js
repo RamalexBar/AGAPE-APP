@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useStore from '../store/useStore';
 import { monetizationAPI } from '../services/api';
+import { openCheckout } from '../services/paymentService';
 import { COLORES, PLANES, BENEFICIOS_PREMIUM } from '../utils/constants';
 
 export default function PremiumScreen({ navigation }) {
@@ -23,40 +24,19 @@ export default function PremiumScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const planActual = PLANES.find(p => p.id === planSel);
 
+  // NOTA: la compra nativa vía App Store/Play Store (expo-in-app-purchases)
+  // requiere módulos nativos que este proyecto aún no instala, así que el
+  // checkout real hoy pasa por LemonSqueezy (mismo flujo que SubscriptionScreen
+  // y el webhook /api/lemonsqueezy/webhook, que ya activa la suscripción).
   const handleComprar = async () => {
-    if (cargando) return;
+    if (cargando || !user) return;
     setCargando(true);
     try {
-      // ── IAP INTEGRATION ─────────────────────────────────────────
-      // Para producción, descomenta el bloque correspondiente a tu plataforma:
-      //
-      // iOS (expo-in-app-purchases):
-      // const IAP = require('expo-in-app-purchases');
-      // await IAP.connectAsync();
-      // const productId = planActual.productId.ios;
-      // IAP.setPurchaseListener(async ({ responseCode, results }) => {
-      //   if (responseCode === IAP.IAPResponseCode.OK) {
-      //     for (const purchase of results) {
-      //       if (!purchase.acknowledged) {
-      //         await monetizationAPI.procesarCompra('apple', purchase.productId, purchase.transactionReceipt);
-      //         await IAP.finishTransactionAsync(purchase, true);
-      //         actualizarUsuario({ premium: true, subscription_type: 'premium' });
-      //         Alert.alert('✅ Suscripción activada', '¡Bienvenido a Ágape Premium!');
-      //         navigation.goBack();
-      //       }
-      //     }
-      //   }
-      // });
-      // await IAP.purchaseItemAsync(productId);
-      //
-      // Android (react-native-iap):
-      // Ver documentación en /backend/MONETIZACION.md
-      // ─────────────────────────────────────────────────────────────
-      Alert.alert(
-        '🚀 Próximamente',
-        'Las compras in-app estarán disponibles en la versión de producción.',
-        [{ text: 'Entendido' }]
-      );
+      await openCheckout({
+        userId: user.id,
+        email: user.email,
+        plan: planSel === 'anual' ? 'annual' : 'monthly',
+      });
     } catch (e) {
       Alert.alert('Error', 'No se pudo procesar la compra. Intenta de nuevo.');
     } finally {
@@ -65,15 +45,17 @@ export default function PremiumScreen({ navigation }) {
   };
 
   const handleRestaurar = async () => {
-    if (restaurando) return;
+    if (restaurando || !user) return;
     setRestaurando(true);
     try {
-      // Restaurar compras (obligatorio Apple 3.1.1)
-      // const IAP = require('expo-in-app-purchases');
-      // await IAP.connectAsync();
-      // const { responseCode, results } = await IAP.getPurchaseHistoryAsync();
-      // if (results?.length > 0) { ... }
-      Alert.alert('Restaurar compras', 'Verifica tus compras anteriores en la tienda de aplicaciones.');
+      const { data } = await monetizationAPI.getStatus();
+      if (data?.es_premium) {
+        actualizarUsuario({ premium: true, subscription_type: data.plan_id });
+        Alert.alert('✅ Suscripción activa', 'Tu Premium ya está activo en esta cuenta.');
+        navigation.goBack();
+      } else {
+        Alert.alert('Sin compras activas', 'No encontramos una suscripción activa para esta cuenta.');
+      }
     } catch {
       Alert.alert('Error', 'No se pudieron restaurar las compras.');
     } finally {

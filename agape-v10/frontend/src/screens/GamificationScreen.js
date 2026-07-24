@@ -1,5 +1,5 @@
 ﻿// ================================================
-// ÃGAPE â€” Pantalla de GamificaciÃ³n: logros y ranking
+// ÃGAPE â€” Pantalla de Gamificación: logros y ranking
 // Archivo: frontend/src/screens/GamificationScreen.js
 // ================================================
 
@@ -59,15 +59,15 @@ export default function GamificationScreen({ navigation }) {
         )}
       </View>
       <View style={[styles.logroMonedas, !logro.obtenido && { opacity: 0.35 }]}>
-        <Text style={styles.logroMonedasTexto}>ðŸ’° {logro.monedas}</Text>
+        <Text style={styles.logroMonedasTexto}>💰 {logro.monedas}</Text>
       </View>
-      {logro.obtenido && <View style={styles.logroBadge}><Text style={{ fontSize: 10 }}>âœ“</Text></View>}
+      {logro.obtenido && <View style={styles.logroBadge}><Text style={{ fontSize: 10 }}>✓</Text></View>}
     </View>
   );
 
   const RankingItem = ({ item, index }) => {
     const foto = item.profiles?.fotos?.[0];
-    const medallas = ['ðŸ¥‡', 'ðŸ¥ˆ', 'ðŸ¥‰'];
+    const medallas = ['🥇', '🥈', '🥉'];
     return (
       <TouchableOpacity
         style={styles.rankingItem}
@@ -80,17 +80,17 @@ export default function GamificationScreen({ navigation }) {
           {foto
             ? <Image source={{ uri: foto }} style={styles.rankingImg} contentFit="cover" />
             : <View style={[styles.rankingImg, { backgroundColor: '#2d1b45', justifyContent: 'center', alignItems: 'center' }]}>
-                <Text style={{ fontSize: 18 }}>ðŸ‘¤</Text>
+                <Text style={{ fontSize: 18 }}>👤</Text>
               </View>
           }
         </View>
         <View style={styles.rankingInfo}>
-          <Text style={styles.rankingNombre}>{item.nombre}, {item.edad}</Text>
-          <Text style={styles.rankingLikes}>â¤ï¸ {item.likes_semana} likes esta semana</Text>
+          <Text style={styles.rankingNombre}>{item.nombre} - Nivel {item.nivel}</Text>
+          <Text style={styles.rankingLikes}>{item.racha_devocional} dias de racha - {item.total_xp} XP</Text>
         </View>
         <View style={[styles.rankingBadge, { backgroundColor: index < 3 ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.08)' }]}>
           <Text style={[styles.rankingBadgeTexto, { color: index < 3 ? '#FFD700' : 'rgba(255,255,255,0.4)' }]}>
-            {item.badge_reputacion === 'oro' ? 'â­' : ''}
+            {index < 3 ? '*' : ''}
           </Text>
         </View>
       </TouchableOpacity>
@@ -108,7 +108,7 @@ export default function GamificationScreen({ navigation }) {
   return (
     <View style={[styles.fondo, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Text style={styles.titulo}>ðŸ† Logros y ranking</Text>
+        <Text style={styles.titulo}>🏆 Logros y ranking</Text>
       </View>
 
       {/* Resumen de racha */}
@@ -116,17 +116,17 @@ export default function GamificationScreen({ navigation }) {
         <LinearGradient colors={['rgba(196,77,255,0.2)', 'rgba(255,107,157,0.1)']} style={styles.resumenCard}>
           <View style={styles.resumenItem}>
             <Text style={styles.resumenNum}>{datos.racha_dias}</Text>
-            <Text style={styles.resumenLabel}>ðŸ”¥ Racha dÃ­as</Text>
+            <Text style={styles.resumenLabel}>🔥 Racha días</Text>
           </View>
           <View style={styles.separador} />
           <View style={styles.resumenItem}>
             <Text style={styles.resumenNum}>{datos.obtenidos_total}</Text>
-            <Text style={styles.resumenLabel}>ðŸ† Logros</Text>
+            <Text style={styles.resumenLabel}>🏆 Logros</Text>
           </View>
           <View style={styles.separador} />
           <View style={styles.resumenItem}>
             <Text style={styles.resumenNum}>{datos.reputacion}</Text>
-            <Text style={styles.resumenLabel}>â­ ReputaciÃ³n</Text>
+            <Text style={styles.resumenLabel}>⭐ Reputación</Text>
           </View>
         </LinearGradient>
       )}
@@ -136,7 +136,7 @@ export default function GamificationScreen({ navigation }) {
         {['logros', 'ranking'].map(t => (
           <TouchableOpacity key={t} style={[styles.tab, tab === t && styles.tabActivo]} onPress={() => setTab(t)}>
             <Text style={[styles.tabTexto, tab === t && styles.tabTextoActivo]}>
-              {t === 'logros' ? 'ðŸ† Logros' : 'ðŸŒŸ Ranking'}
+              {t === 'logros' ? '🏆 Logros' : '🌟 Ranking'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -156,9 +156,9 @@ export default function GamificationScreen({ navigation }) {
 
         {tab === 'ranking' && ranking.length === 0 && (
           <View style={{ padding: 40, alignItems: 'center', gap: 10 }}>
-            <Text style={{ fontSize: 48 }}>ðŸŒŸ</Text>
+            <Text style={{ fontSize: 48 }}>🌟</Text>
             <Text style={{ color: '#fff', fontSize: 16, textAlign: 'center' }}>
-              SÃ© el primero en el ranking esta semana
+              Sé el primero en el ranking esta semana
             </Text>
           </View>
         )}

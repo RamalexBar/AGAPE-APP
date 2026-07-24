@@ -13,10 +13,9 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useStore from '../store/useStore';
-import { matchAPI, activeAPI } from '../services/api';
+import { matchAPI, activeAPI, adAPI } from '../services/api';
 import { COLORES, SOMBRAS } from '../utils/constants';
 import { msAContador } from '../utils/helpers';
-import MatchModal from '../components/MatchModal';
 
 const { width, height } = Dimensions.get('window');
 const CARD_H = height * 0.62;
@@ -26,6 +25,7 @@ export default function HomeScreen({ navigation }) {
   const {
     user, perfilesFeed, setPerfilesFeed, removerPerfilFeed,
     setNuevoMatch, likesRestantes, likesSiguienteReset, usarLike, verificarLikes,
+    agregarLikesExtra,
   } = useStore();
 
   const [cargando,        setCargando]        = useState(true);
@@ -34,6 +34,7 @@ export default function HomeScreen({ navigation }) {
   const [contadorActivos, setContadorActivos] = useState(0);
   const [tiempoReset,     setTiempoReset]     = useState('');
   const [cardIndex,       setCardIndex]       = useState(0);
+  const [puedeVerAnuncio, setPuedeVerAnuncio] = useState(false);
 
   const swiperRef  = useRef(null);
   const likeAnim   = useRef(new Animated.Value(0)).current;
@@ -49,6 +50,9 @@ export default function HomeScreen({ navigation }) {
     verificarLikes();
     activeAPI.getContador()
       .then(r => setContadorActivos(r.data?.total_activos || 0))
+      .catch(() => {});
+    adAPI.getEstado()
+      .then(r => setPuedeVerAnuncio(!!r.data?.puede_ver_anuncio))
       .catch(() => {});
 
     // Animación pulsante en botón like
@@ -94,6 +98,29 @@ export default function HomeScreen({ navigation }) {
     ]).start();
   };
 
+  // ── Anuncio para +6 swipes extra ─────────────────────
+  const verAnuncio = useCallback(async () => {
+    try {
+      // TODO: reproducir el SDK de anuncios real y solo confirmar aquí
+      // cuando el usuario lo vea completo. Por ahora se confirma directo.
+      const { data } = await adAPI.verAnuncio();
+      await agregarLikesExtra(data.extra_swipes || 6);
+      setPuedeVerAnuncio(!!data.puede_ver_mas_anuncios);
+      Alert.alert('🎉 ¡Listo!', data.message || `+${data.extra_swipes || 6} swipes desbloqueados.`);
+    } catch (e) {
+      Alert.alert('Error', e.response?.data?.error?.message || 'No se pudo procesar el anuncio.');
+    }
+  }, [agregarLikesExtra]);
+
+  const mostrarLimiteAlcanzado = useCallback((info) => {
+    const botones = [{ text: 'Esperar', style: 'cancel' }];
+    if (info?.showAdsOption) {
+      botones.push({ text: '📺 Ver anuncio (+6)', onPress: verAnuncio });
+    }
+    botones.push({ text: '⭐ Ver Premium', onPress: () => navigation.navigate('Premium') });
+    Alert.alert('💔 Límite alcanzado', info?.message || 'Alcanzaste tu límite de conexiones de hoy.', botones);
+  }, [verAnuncio, navigation]);
+
   // ── Lógica principal de swipe ────────────────────────
   const manejarSwipe = useCallback(async (idx, tipo) => {
     if (procesando) return;
@@ -103,13 +130,13 @@ export default function HomeScreen({ navigation }) {
     if (tipo !== 'dislike') {
       const puedeLike = await usarLike();
       if (!puedeLike) {
+        const botones = [{ text: 'Esperar', style: 'cancel' }];
+        if (puedeVerAnuncio) botones.push({ text: '📺 Ver anuncio (+6)', onPress: verAnuncio });
+        botones.push({ text: '⭐ Ver Premium', onPress: () => navigation.navigate('Premium') });
         Alert.alert(
           '💔 Sin likes',
           `Usaste tus ${20} likes gratis.\nVuelven en ${tiempoReset || '12h'}.`,
-          [
-            { text: 'Esperar', style: 'cancel' },
-            { text: '⭐ Ver Premium', onPress: () => navigation.navigate('Premium') },
-          ]
+          botones
         );
         return;
       }
@@ -135,11 +162,17 @@ export default function HomeScreen({ navigation }) {
       // Recargar feed cuando quedan pocos perfiles
       if (perfilesFeed.length - idx <= 4) cargarFeed();
     } catch (e) {
-      console.error('Swipe error:', e);
+      removerPerfilFeed(perfil.id);
+      const info = e.response?.data;
+      if (e.response?.status === 429 && info?.limitAlcanzado) {
+        mostrarLimiteAlcanzado(info);
+      } else {
+        console.error('Swipe error:', e);
+      }
     } finally {
       setProcesando(false);
     }
-  }, [procesando, perfilesFeed, contadorSwipes, tiempoReset]);
+  }, [procesando, perfilesFeed, contadorSwipes, tiempoReset, puedeVerAnuncio, verAnuncio, mostrarLimiteAlcanzado]);
 
   const swipeDerecha  = () => swiperRef.current?.swipeRight();
   const swipeIzquierda= () => swiperRef.current?.swipeLeft();
@@ -150,9 +183,11 @@ export default function HomeScreen({ navigation }) {
     const fotos  = perfil?.profiles?.fotos || perfil?.fotos || [];
     const nombre = perfil?.profiles?.nombre || perfil?.nombre || 'Usuario';
     const edad   = perfil?.profiles?.edad   || perfil?.edad   || '';
-    const ciudad = perfil?.profiles?.ciudad || perfil?.ciudad || '';
+    const ciudad = perfil?.profiles?.ciudad || perfil?.ubicacion_ciudad || perfil?.ciudad || '';
     const bio    = perfil?.profiles?.bio    || perfil?.bio    || '';
-    const compat = perfil?.compatibilidad   || Math.floor(Math.random() * 20 + 75);
+    // El feed devuelve compatibilidad como objeto ({score_total, detalles, ...}),
+    // no como número — renderizar el objeto directo crashea <Text>.
+    const compat = perfil?.compatibilidad?.score_total ?? Math.floor(Math.random() * 20 + 75);
     const intereses = (perfil?.profiles?.intereses || perfil?.intereses || []).slice(0, 3);
 
     return (
@@ -279,6 +314,10 @@ export default function HomeScreen({ navigation }) {
             </Text>
           </TouchableOpacity>
 
+          <TouchableOpacity onPress={() => navigation.navigate('Devocional')} style={styles.btnIcono}>
+            <Ionicons name="book-outline" size={22} color="rgba(255,255,255,0.65)" />
+          </TouchableOpacity>
+
           <TouchableOpacity onPress={() => navigation.navigate('Logros')} style={styles.btnIcono}>
             <Ionicons name="trophy-outline" size={22} color="rgba(255,255,255,0.65)" />
           </TouchableOpacity>
@@ -388,11 +427,6 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       )}
-
-      {/* ── Match Modal ── */}
-      <MatchModal navigation={navigation} onVerChat={(match) => {
-        navigation.navigate('Chat', { match, usuario: match.usuario });
-      }} />
     </View>
   );
 }

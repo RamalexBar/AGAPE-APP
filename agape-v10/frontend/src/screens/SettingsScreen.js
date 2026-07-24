@@ -237,6 +237,7 @@ export default function SettingsScreen({ navigation }) {
         <View style={styles.seccion}>
           <Text style={styles.seccionTitulo}>Logros y ranking</Text>
           <View style={styles.seccionCard}>
+            <Opcion icono='book-outline' titulo='Camino espiritual' subtitulo='Devocional del día y misiones' color='#B44DFF' onPress={() => navigation.navigate('Devocional')} />
             <Opcion icono='trophy-outline' titulo='Mis logros y racha' subtitulo='Achievements, racha y ranking semanal' color='#FFD700' onPress={() => navigation.navigate('Logros')} />
           </View>
         </View>

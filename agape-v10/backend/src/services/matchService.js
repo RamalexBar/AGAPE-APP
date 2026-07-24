@@ -17,14 +17,53 @@ const getMatches = async (userId) => {
     .order('connected_at', { ascending: false });
 
   if (error) throw Object.assign(new Error('Error al obtener matches.'), { status: 500 });
+  if (!data?.length) return [];
 
-  return (data || []).map(conn => {
-    const match = conn.user1?.id === userId ? conn.user2 : conn.user1;
+  const matches = data.map(conn => ({
+    match_id: conn.id,
+    connection_type: conn.connection_type,
+    connected_at: conn.connected_at,
+    usuario: conn.user1?.id === userId ? conn.user2 : conn.user1,
+  }));
+
+  const otrosIds = matches.map(m => m.usuario?.id).filter(Boolean);
+
+  // Fotos de perfil + última vista previa de mensaje, para que la lista de
+  // "Mensajes" muestre foto real, nombre real y no marque como "NUEVO" a
+  // conversaciones que ya tienen mensajes.
+  const [{ data: perfilesFotos }, { data: conversaciones }] = await Promise.all([
+    otrosIds.length
+      ? supabase.from('profiles').select('user_id, fotos').in('user_id', otrosIds)
+      : Promise.resolve({ data: [] }),
+    otrosIds.length
+      ? supabase.from('conversations')
+          .select('user_id_1, user_id_2, last_message_at, messages(content, sender_id, created_at)')
+          .or(otrosIds.map(id =>
+            `and(user_id_1.eq.${userId},user_id_2.eq.${id}),and(user_id_1.eq.${id},user_id_2.eq.${userId})`
+          ).join(','))
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const fotosPorUsuario = new Map((perfilesFotos || []).map(p => [p.user_id, p.fotos || []]));
+  const conversacionPorOtro = new Map();
+  (conversaciones || []).forEach(conv => {
+    const otroId = conv.user_id_1 === userId ? conv.user_id_2 : conv.user_id_1;
+    const ultimo = (conv.messages || [])
+      .slice()
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null;
+    conversacionPorOtro.set(otroId, {
+      last_message_at: conv.last_message_at,
+      ultimo_mensaje: ultimo?.content || null,
+    });
+  });
+
+  return matches.map(m => {
+    const conv = conversacionPorOtro.get(m.usuario?.id);
     return {
-      match_id: conn.id,
-      connection_type: conn.connection_type,
-      connected_at: conn.connected_at,
-      usuario: match,
+      ...m,
+      usuario: m.usuario ? { ...m.usuario, profiles: { fotos: fotosPorUsuario.get(m.usuario.id) || [] } } : m.usuario,
+      updated_at: conv?.last_message_at || m.connected_at,
+      ultimo_mensaje: conv?.ultimo_mensaje || null,
     };
   });
 };

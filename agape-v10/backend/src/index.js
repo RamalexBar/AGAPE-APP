@@ -1,5 +1,5 @@
 ﻿// ================================================
-// ÃGAPE Backend v10 â€” Production Ready
+// ÁGAPE Backend v10 — Production Ready
 // Node.js + Express + Socket.io + Supabase
 // ================================================
 require('dotenv').config();
@@ -101,14 +101,14 @@ app.use('/api/translate',     require('./routes/translator'));
 app.use('/api/videocall',     require('./routes/videocall'));
 app.use('/api/wompi',         require('./routes/wompi'));
 
-// Legales pÃºblicos (App Store exige URLs sin auth)
+// Legales públicos (App Store exige URLs sin auth)
 app.get('/privacy', (req, res) => res.redirect(env.PRIVACY_POLICY_URL));
 app.get('/terms',   (req, res) => res.redirect(env.TERMS_OF_SERVICE_URL));
 
 // Health check
 app.get('/health', (_req, res) => res.json({
   status: 'OK',
-  app: 'ÃGAPE Backend v10',
+  app: 'ÁGAPE Backend v10',
   version: '10.0.0',
   env: env.NODE_ENV,
   timestamp: new Date().toISOString(),
@@ -128,9 +128,9 @@ require('./socket/socketHandler')(server);
 
 const PORT = env.PORT || 3000;
 server.listen(PORT, () => {
-  logger.info(`\n  âœï¸  ÃGAPE Backend v10 â€” ${env.NODE_ENV}`);
-  logger.info(`  â†’ http://localhost:${PORT}`);
-  logger.info(`  â†’ Supabase + Socket.io + IAP listo\n`);
+  logger.info(`\n  ✝️  ÁGAPE Backend v10 — ${env.NODE_ENV}`);
+  logger.info(`  → http://localhost:${PORT}`);
+  logger.info(`  → Supabase + Socket.io + IAP listo\n`);
 });
 
 module.exports = { app, server };

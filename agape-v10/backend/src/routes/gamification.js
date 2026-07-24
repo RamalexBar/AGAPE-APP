@@ -6,6 +6,7 @@
 // ================================================
 const router = require('express').Router();
 const { authenticateToken } = require('../middlewares/auth');
+const supabase = require('../config/supabase');
 const {
   BADGES_ESPIRITUALES,
   obtenerPerfilEspiritual,
@@ -43,10 +44,17 @@ router.get('/ranking', authenticateToken, async (req, res, next) => {
     const limite = parseInt(req.query.limite) || 20;
     const rankingCrudo = await obtenerRankingCrecimiento(limite);
 
+    const ids = rankingCrudo.map(r => r.user?.id).filter(Boolean);
+    const { data: perfilesFotos } = ids.length
+      ? await supabase.from('profiles').select('user_id, fotos').in('user_id', ids)
+      : { data: [] };
+    const fotosPorUsuario = new Map((perfilesFotos || []).map(p => [p.user_id, p.fotos || []]));
+
     const ranking = rankingCrudo.map(r => ({
       id: r.user?.id,
       nombre: r.user?.nombre,
       avatar_url: r.user?.avatar_url,
+      profiles: { fotos: fotosPorUsuario.get(r.user?.id) || [] },
       is_verified: r.user?.is_verified,
       posicion: r.posicion,
       total_xp: r.total_xp,

@@ -48,7 +48,7 @@ export default function ActiveNowScreen({ navigation }) {
   const darLike = async (userId) => {
     try {
       const { data } = await matchAPI.darLike(userId);
-      if (data.es_match && data.es_nuevo) {
+      if (data.es_match) {
         navigation.navigate('Main');
       }
     } catch (e) { console.error(e); }

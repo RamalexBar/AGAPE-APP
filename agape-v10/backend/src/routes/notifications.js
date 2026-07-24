@@ -2,7 +2,7 @@
 const router = require('express').Router();
 const { body } = require('express-validator');
 const { validate } = require('../middlewares/validate');
-const { authenticateToken } = require('../middlewares/auth');
+const { authenticateToken, requireAdmin } = require('../middlewares/auth');
 const notificationService = require('../services/notificationService');
 
 // POST /api/notifications/token  → registrar FCM token
@@ -32,8 +32,10 @@ router.delete('/token',
   }
 );
 // POST /api/notifications/send → enviar notificación push
+// Solo admin: uso interno/soporte, no expuesto a usuarios normales.
 router.post('/send',
   authenticateToken,
+  requireAdmin,
   async (req, res, next) => {
     try {
       const { toUserId, title, body, data } = req.body;

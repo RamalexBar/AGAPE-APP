@@ -126,15 +126,10 @@ module.exports = (server) => {
       socket.to('match_' + match_id).emit('usuario_dejo_escribir');
     });
 
-    socket.on('mark_read', async ({ conversationId }) => {
+    socket.on('mark_read', async ({ match_id }) => {
       try {
-        const { data: conv } = await supabase
-          .from('conversations')
-          .select('id')
-          .eq('id', conversationId)
-          .or('user_id_1.eq.' + userId + ',user_id_2.eq.' + userId)
-          .single();
-        if (!conv) return;
+        const conversationId = await resolverConversacion(match_id, userId);
+        if (!conversationId) return;
 
         const now = new Date().toISOString();
         await supabase.from('messages')
@@ -142,7 +137,7 @@ module.exports = (server) => {
           .eq('conversation_id', conversationId)
           .neq('sender_id', userId)
           .is('read_at', null);
-        io.to('conv_' + conversationId).emit('messages_read', { conversationId, read_by: userId, read_at: now });
+        io.to('match_' + match_id).emit('messages_read', { match_id, read_by: userId, read_at: now });
       } catch (err) { console.error('[Socket] mark_read:', err.message); }
     });
 

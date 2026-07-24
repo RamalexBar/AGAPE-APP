@@ -96,6 +96,12 @@ export const matchAPI = {
   eliminarMatch: (matchId) => api.delete(`/api/matches/${matchId}`),
 };
 
+// ── ANUNCIOS (bonus de swipes) ────────────────────────────
+export const adAPI = {
+  getEstado:  () => api.get('/api/ad-status'),
+  verAnuncio: () => api.post('/api/watch-ad'),
+};
+
 // ── ACTIVE NOW ────────────────────────────────────────────
 // NOTA: estas rutas no existen aún en el backend.
 // Se añaden con fallback seguro para no crashear la app.
@@ -150,11 +156,12 @@ export const invisibleAPI = {
 
 // ── ESPIRITUAL ────────────────────────────────────────────
 export const spiritualAPI = {
-  getDevocional:   () => api.get('/api/spiritual/devocional/hoy'),
-  getVersiculoDia: () => api.get('/api/spiritual/devocional/publico'),
-  getRetos:        () => api.get('/api/spiritual/misiones'),
-  completarReto:   (id) => api.post(`/api/spiritual/misiones/${id}/completar`),
-  getViaje:        () => api.get('/api/spiritual/perfil'),
+  getDevocional:      () => api.get('/api/spiritual/devocional/hoy'),
+  getVersiculoDia:    () => api.get('/api/spiritual/devocional/publico'),
+  completarDevocional:(versiculo_id) => api.post('/api/spiritual/devocional/completar', { versiculo_id }),
+  getRetos:           () => api.get('/api/spiritual/misiones'),
+  completarReto:      (id) => api.post(`/api/spiritual/misiones/${id}/completar`),
+  getViaje:           () => api.get('/api/spiritual/perfil'),
 };
 
 // ── VERIFICACIÓN DE IDENTIDAD ──────────────────────────────

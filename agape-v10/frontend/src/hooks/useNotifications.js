@@ -29,7 +29,7 @@ export default function useNotifications() {
 
     notifListener.current = Notifications.addNotificationReceivedListener((notif) => {
       const tipo = notif.request.content.data?.tipo;
-      if (tipo === 'nuevo_mensaje') incrementarNoLeidos();
+      if (tipo === 'message') incrementarNoLeidos();
     });
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {

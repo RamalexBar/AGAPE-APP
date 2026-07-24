@@ -107,6 +107,20 @@ const useStore = create((set, get) => ({
     } catch {}
   },
 
+  // Suma swipes extra (p.ej. tras ver un anuncio) al contador local de 12h,
+  // sin esperar a que se cumpla la ventana de reseteo.
+  agregarLikesExtra: async (cantidad) => {
+    const { likesRestantes } = get();
+    const nuevo = likesRestantes + cantidad;
+    set({ likesRestantes: nuevo });
+    try {
+      const raw = await SecureStore.getItemAsync('agape_likes_data');
+      const saved = raw ? JSON.parse(raw) : { resetAt: Date.now() + LIKES_INTERVALO_MS };
+      await SecureStore.setItemAsync('agape_likes_data',
+        JSON.stringify({ ...saved, count: nuevo }));
+    } catch {}
+  },
+
   usarLike: async () => {
     const { user, likesRestantes } = get();
     if (user?.premium || user?.subscription_type === 'premium') return true;
