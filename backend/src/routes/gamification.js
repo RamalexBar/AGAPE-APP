@@ -24,6 +24,7 @@ router.get('/mis-logros', authenticateToken, async (req, res, next) => {
       emoji: b.emoji,
       titulo: b.titulo,
       descripcion: b.descripcion,
+      xp: b.xp,
       obtenido: idsObtenidos.has(b.id),
       fecha_obtenido: idsObtenidos.get(b.id) || null,
     }));

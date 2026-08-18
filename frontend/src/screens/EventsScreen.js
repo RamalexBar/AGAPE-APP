@@ -73,7 +73,7 @@ export default function EventsScreen({ navigation }) {
   const unirse = async (eventId, titulo) => {
     try {
       await eventsAPI.unirse(eventId);
-      Alert.alert('📩 Solicitud enviada', `Esperando que el organizador de "${titulo}" te acepte.`);
+      Alert.alert('✅ ¡Listo!', `Te uniste a "${titulo}".`);
       cargar();
     } catch (e) {
       Alert.alert('Error', e.response?.data?.error?.message || 'No se pudo unir.');

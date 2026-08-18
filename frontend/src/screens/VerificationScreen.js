@@ -8,7 +8,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Alert, ActivityIndicator, Platform
 } from 'react-native';
-import { Camera } from 'expo-camera';
+import { CameraView, Camera } from 'expo-camera';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -78,7 +78,7 @@ export default function VerificationScreen({ navigation }) {
           <Text style={styles.resultadoTexto}>{resultado.mensaje}</Text>
           {resultado.aprobado && (
             <View style={styles.selloBadge}>
-              <Text style={styles.selloTexto}>✓ Perfil verificado — confianza del {resultado.confianza}%</Text>
+              <Text style={styles.selloTexto}>✓ Perfil verificado</Text>
             </View>
           )}
           <TouchableOpacity
@@ -123,8 +123,8 @@ export default function VerificationScreen({ navigation }) {
         <View style={styles.infoCard}>
           <Text style={styles.infoTitulo}>¿Cómo funciona?</Text>
           <Text style={styles.infoTexto}>
-            Toma una selfie en vivo. La comparamos con tu foto de perfil
-            para confirmar que eres una persona real. El proceso dura menos de 5 segundos.
+            Toma una selfie en vivo para confirmar que hay una persona real detrás del perfil.
+            El proceso dura menos de 5 segundos.
           </Text>
           <View style={styles.beneficiosFila}>
             {['Sello azul en tu perfil', 'Más matches y likes', 'Mayor confianza'].map((b, i) => (
@@ -152,10 +152,10 @@ export default function VerificationScreen({ navigation }) {
 
         {permiso === true && !procesando && (
           <View style={styles.cameraContenedor}>
-            <Camera
+            <CameraView
               ref={cameraRef}
               style={styles.camera}
-              type={Camera.Constants.Type.front}
+              facing="front"
               ratio="1:1"
             />
             <View style={styles.cameraOverlay}>

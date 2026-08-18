@@ -59,7 +59,7 @@ export default function GamificationScreen({ navigation }) {
         )}
       </View>
       <View style={[styles.logroMonedas, !logro.obtenido && { opacity: 0.35 }]}>
-        <Text style={styles.logroMonedasTexto}>💰 {logro.monedas}</Text>
+        <Text style={styles.logroMonedasTexto}>⭐ {logro.xp} XP</Text>
       </View>
       {logro.obtenido && <View style={styles.logroBadge}><Text style={{ fontSize: 10 }}>✓</Text></View>}
     </View>

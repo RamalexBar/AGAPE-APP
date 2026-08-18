@@ -54,7 +54,7 @@ router.post('/selfie', authenticateToken, upload.single('selfie'), async (req, r
 
     await supabase.from('users').update({ is_verified: true }).eq('id', req.user.id);
 
-    res.status(201).json({ aprobado: true, confianza: 95, mensaje: '¡Perfil verificado!' });
+    res.status(201).json({ aprobado: true, mensaje: '¡Perfil verificado!' });
   } catch (e) { next(e); }
 });
 
