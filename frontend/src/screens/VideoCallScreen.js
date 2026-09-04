@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
+import { requestCameraPermissionsAsync, requestMicrophonePermissionsAsync } from 'expo-camera';
 import api from '../services/api';
 import { getSocket } from '../services/socketService';
 import useStore from '../store/useStore';
@@ -24,14 +25,17 @@ const LIMITE_FREE    = 60;   // 1 minuto
 const LIMITE_PREMIUM = 300;  // 5 minutos
 const AVISO_ANTES    = 10;   // Avisar 10s antes
 
-// Importar Agora solo si está instalado
-let RtcEngine, AgoraView;
+// Importar Agora solo si está instalado y compilado con soporte nativo
+// (requiere un dev client / build de EAS — no funciona en Expo Go).
+let createAgoraRtcEngine, RtcSurfaceView, ChannelProfileType, ClientRoleType;
 try {
   const agora = require('react-native-agora');
-  RtcEngine = agora.default || agora.RtcEngine;
-  AgoraView = agora.RtcLocalView?.SurfaceView || agora.RtcRemoteView?.SurfaceView;
+  createAgoraRtcEngine = agora.createAgoraRtcEngine;
+  RtcSurfaceView = agora.RtcSurfaceView;
+  ChannelProfileType = agora.ChannelProfileType;
+  ClientRoleType = agora.ClientRoleType;
 } catch {
-  // Agora no instalado — usar modo demo
+  // Agora no instalado o no compilado nativamente — usar modo demo
 }
 
 const COLORES = {
@@ -52,9 +56,12 @@ export default function VideoCallScreen({ route, navigation }) {
   const [camaraOff, setCamaraOff]       = useState(false);
   const [duracion, setDuracion]         = useState(0);
   const [engineListo, setEngineListo]   = useState(false);
+  const [remoteUid, setRemoteUid]       = useState(null);
   const [modalPremium, setModalPremium] = useState(false);
   const [avisadoFin, setAvisadoFin]     = useState(false);
+  const [canalActual, setCanalActual]   = useState(null);
   const engineRef  = useRef(null);
+  const handlerRef = useRef(null);
   const timerRef   = useRef(null);
   const barraAnim  = useRef(new Animated.Value(1)).current;
   const insets     = useSafeAreaInsets();
@@ -93,9 +100,10 @@ export default function VideoCallScreen({ route, navigation }) {
   const otroUsuario = match?.usuario || {};
 
   useEffect(() => {
-    if (llamada_entrante) {
-      iniciarEngine(llamada_entrante.canal, llamada_entrante.app_id);
-    } else if (match) {
+    // Si es una llamada entrante, NO se une al canal automáticamente: se
+    // queda mostrando la pantalla de "llamada entrante" (cámara/micrófono
+    // apagados) hasta que el usuario toque aceptar — ver aceptarLlamada().
+    if (!llamada_entrante && match) {
       solicitarLlamada();
     }
     return () => limpiar();
@@ -115,8 +123,10 @@ export default function VideoCallScreen({ route, navigation }) {
 
   const aceptarLlamada = async () => {
     try {
-      const { data } = await api.post(`/api/videocall/responder/${llamadaId}`, { match_id: llamada_entrante.match_id, accion: 'aceptar' });
-      await iniciarEngine(llamada_entrante.canal, llamada_entrante.app_id, data.token, data.uid);
+      // Las credenciales (app_id/token) ya viajaron en el evento de socket
+      // "videocall_incoming" — este POST solo notifica al otro extremo.
+      await api.post(`/api/videocall/responder/${llamadaId}`, { match_id: llamada_entrante.match_id, accion: 'aceptar' });
+      await iniciarEngine(llamada_entrante.canal, llamada_entrante.app_id, llamada_entrante.token, 0);
     } catch (e) {
       Alert.alert('Error', 'No se pudo conectar.');
     }
@@ -128,8 +138,11 @@ export default function VideoCallScreen({ route, navigation }) {
   };
 
   const iniciarEngine = async (canal, appId, token, uid) => {
-    if (!RtcEngine) {
-      // Modo demo sin Agora instalado
+    setCanalActual(canal);
+
+    if (!createAgoraRtcEngine || !appId) {
+      // Modo demo: no hay módulo nativo de Agora compilado, o el backend
+      // no tiene AGORA_APP_ID/AGORA_APP_CERTIFICATE configurados.
       setEstado('en_curso');
       timerRef.current = setInterval(() => setDuracion(d => d + 1), 1000);
       setEngineListo(true);
@@ -137,19 +150,46 @@ export default function VideoCallScreen({ route, navigation }) {
     }
 
     try {
-      engineRef.current = await RtcEngine.create(appId);
-      await engineRef.current.enableVideo();
-      engineRef.current.addListener('UserOffline', finalizarLlamada);
-      engineRef.current.addListener('JoinChannelSuccess', () => {
-        setEstado('en_curso');
-        timerRef.current = setInterval(() => setDuracion(d => d + 1), 1000);
+      const permisoCamara = await requestCameraPermissionsAsync();
+      const permisoMic    = await requestMicrophonePermissionsAsync();
+      if (!permisoCamara.granted || !permisoMic.granted) {
+        Alert.alert('Permisos requeridos', 'Ágape necesita acceso a tu cámara y micrófono para videollamadas.', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+        return;
+      }
+
+      const engine = createAgoraRtcEngine();
+      engineRef.current = engine;
+
+      handlerRef.current = {
+        onJoinChannelSuccess: () => {
+          setEstado('en_curso');
+          timerRef.current = setInterval(() => setDuracion(d => d + 1), 1000);
+        },
+        onUserJoined: (_connection, uidRemoto) => setRemoteUid(uidRemoto),
+        onUserOffline: () => { setRemoteUid(null); finalizarLlamada(); },
+        onError: (_err, msg) => console.warn('[Agora] error:', msg),
+      };
+      engine.registerEventHandler(handlerRef.current);
+
+      engine.initialize({ appId });
+      engine.enableVideo();
+      engine.startPreview();
+
+      engine.joinChannel(token || '', canal, uid || 0, {
+        channelProfile: ChannelProfileType.ChannelProfileCommunication,
+        clientRoleType: ClientRoleType.ClientRoleBroadcaster,
+        publishMicrophoneTrack: true,
+        publishCameraTrack: true,
+        autoSubscribeAudio: true,
+        autoSubscribeVideo: true,
       });
 
-      await engineRef.current.joinChannel(token || null, canal, null, uid || 0);
       setEngineListo(true);
     } catch (e) {
       console.error('Agora error:', e);
-      // Fallback demo
+      // Fallback demo si algo falla al inicializar el motor real
       setEstado('en_curso');
       timerRef.current = setInterval(() => setDuracion(d => d + 1), 1000);
       setEngineListo(true);
@@ -167,14 +207,19 @@ export default function VideoCallScreen({ route, navigation }) {
 
   const limpiar = () => {
     clearInterval(timerRef.current);
-    if (engineRef.current) {
-      engineRef.current.leaveChannel().catch(() => {});
-      engineRef.current.destroy().catch(() => {});
+    const engine = engineRef.current;
+    if (engine) {
+      try {
+        if (handlerRef.current) engine.unregisterEventHandler(handlerRef.current);
+        engine.leaveChannel();
+        engine.release();
+      } catch {}
+      engineRef.current = null;
     }
   };
 
-  const toggleMic    = async () => { setMicMute(!micMute);    await engineRef.current?.muteLocalAudioStream(!micMute); };
-  const toggleCamara = async () => { setCamaraOff(!camaraOff); await engineRef.current?.muteLocalVideoStream(!camaraOff); };
+  const toggleMic    = () => { const v = !micMute;    setMicMute(v);    try { engineRef.current?.muteLocalAudioStream(v); } catch {} };
+  const toggleCamara = () => { const v = !camaraOff;  setCamaraOff(v);  try { engineRef.current?.muteLocalVideoStream(v); } catch {} };
 
   const formatearTiempo = (seg) => {
     const m = Math.floor(seg / 60).toString().padStart(2, '0');
@@ -253,30 +298,40 @@ export default function VideoCallScreen({ route, navigation }) {
 
       {/* Video remoto */}
       <View style={styles.videoFondo}>
-        {engineListo && RtcEngine && AgoraView
-          ? null
-          : (
-            <View style={styles.videoDemo}>
-              <View style={styles.avatarVideo}>
-                {otroUsuario?.profiles?.fotos?.[0]
-                  ? <Image source={{ uri: otroUsuario.profiles.fotos[0] }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                  : <Text style={{ fontSize: 60 }}>👤</Text>
-                }
-              </View>
-              <Text style={styles.modoDemoTexto}>
-                {estado === 'conectando' ? 'Conectando...' : 'Modo demo · instala react-native-agora para video real'}
-              </Text>
+        {engineListo && createAgoraRtcEngine && RtcSurfaceView && remoteUid !== null ? (
+          <RtcSurfaceView
+            style={{ flex: 1 }}
+            canvas={{ uid: remoteUid }}
+            connection={{ channelId: canalActual }}
+          />
+        ) : (
+          <View style={styles.videoDemo}>
+            <View style={styles.avatarVideo}>
+              {otroUsuario?.profiles?.fotos?.[0]
+                ? <Image source={{ uri: otroUsuario.profiles.fotos[0] }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                : <Text style={{ fontSize: 60 }}>👤</Text>
+              }
             </View>
-          )
-        }
+            <Text style={styles.modoDemoTexto}>
+              {estado === 'conectando'
+                ? 'Conectando...'
+                : engineListo && createAgoraRtcEngine
+                  ? 'Esperando a que el otro se conecte...'
+                  : 'Modo demo · videollamada real no configurada'}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Mi video */}
       <View style={styles.miVideoContenedor}>
-        {!camaraOff
-          ? <View style={styles.miVideoDemo}><Text style={{ fontSize: 24 }}>🤳</Text></View>
-          : <View style={[styles.miVideoDemo, { backgroundColor: '#333' }]}><Ionicons name="videocam-off" size={20} color="#999" /></View>
-        }
+        {camaraOff ? (
+          <View style={[styles.miVideoDemo, { backgroundColor: '#333' }]}><Ionicons name="videocam-off" size={20} color="#999" /></View>
+        ) : engineListo && createAgoraRtcEngine && RtcSurfaceView ? (
+          <RtcSurfaceView style={{ flex: 1 }} canvas={{ uid: 0 }} zOrderMediaOverlay />
+        ) : (
+          <View style={styles.miVideoDemo}><Text style={{ fontSize: 24 }}>🤳</Text></View>
+        )}
       </View>
 
       {/* Header */}

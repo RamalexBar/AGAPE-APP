@@ -134,7 +134,10 @@ export default function EventsScreen({ navigation }) {
   return (
     <View style={[styles.fondo, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <View>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.btnVolver}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
           <Text style={styles.titulo}>👥 Eventos cercanos</Text>
           <Text style={styles.subtitulo}>{eventos.length} eventos en tu zona</Text>
         </View>
@@ -207,7 +210,8 @@ export default function EventsScreen({ navigation }) {
 const styles = StyleSheet.create({
   fondo: { flex: 1, backgroundColor: '#0f0f1a' },
   centrado: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, paddingBottom: 12 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, paddingBottom: 12, gap: 10 },
+  btnVolver: { padding: 4 },
   titulo: { fontSize: 22, fontWeight: '700', color: '#fff' },
   subtitulo: { color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 2 },
   btnCrear: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },

@@ -61,6 +61,22 @@ router.post('/',
   }
 );
 
+// GET /api/reports/blocked
+// Listar usuarios bloqueados por mí
+router.get('/blocked', authenticateToken, async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('blocked_users')
+      .select('blocked_id, created_at, blocked:blocked_id(id, nombre, avatar_url)')
+      .eq('blocker_id', req.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw Object.assign(new Error('Error al listar bloqueados.'), { status: 500 });
+
+    res.json({ bloqueados: data || [] });
+  } catch (e) { next(e); }
+});
+
 // POST /api/reports/block/:userId
 // Bloquear usuario
 router.post('/block/:userId', authenticateToken, async (req, res, next) => {

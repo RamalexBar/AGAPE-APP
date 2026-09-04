@@ -50,7 +50,7 @@ export default function EntornoScreen({ navigation }) {
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('VerPerfil', { perfil: { ...item, id: item.user_id } })} activeOpacity={0.8}>
       <View style={styles.fotoWrap}>
-        {item.fotos?.[0] ? <Image source={{ uri: item.fotos[0] }} style={styles.foto} contentFit="cover" /> : <View style={[styles.foto, styles.fotoFallback]}><Text style={{fontSize:28}}>person</Text></View>}
+        {item.fotos?.[0] ? <Image source={{ uri: item.fotos[0] }} style={styles.foto} contentFit="cover" /> : <View style={[styles.foto, styles.fotoFallback]}><Ionicons name="person" size={28} color="rgba(255,255,255,0.3)" /></View>}
         {item.is_online && <View style={styles.online} />}
       </View>
       <View style={styles.info}>
@@ -81,7 +81,7 @@ export default function EntornoScreen({ navigation }) {
       </View>
       <FlatList data={usuariosCercanos} keyExtractor={i=>i.user_id} renderItem={renderItem} contentContainerStyle={{padding:16,gap:12}}
         refreshControl={<RefreshControl refreshing={refrescando} onRefresh={onRefrescar} tintColor="#C44DFF" />}
-        ListEmptyComponent={<View style={styles.center}><Text style={{fontSize:40}}>mapa</Text><Text style={styles.nombre}>Nadie en {radio} km</Text><Text style={styles.muted}>Amplia el radio o vuelve mas tarde</Text></View>}
+        ListEmptyComponent={<View style={styles.center}><Ionicons name="map-outline" size={40} color="rgba(255,255,255,0.3)" /><Text style={styles.nombre}>Nadie en {radio} km</Text><Text style={styles.muted}>Amplia el radio o vuelve mas tarde</Text></View>}
       />
       <Modal visible={modalMensaje} transparent animationType="slide">
         <View style={styles.modalFondo}>

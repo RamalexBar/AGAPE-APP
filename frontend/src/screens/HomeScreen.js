@@ -186,8 +186,9 @@ export default function HomeScreen({ navigation }) {
     const ciudad = perfil?.profiles?.ciudad || perfil?.ubicacion_ciudad || perfil?.ciudad || '';
     const bio    = perfil?.profiles?.bio    || perfil?.bio    || '';
     // El feed devuelve compatibilidad como objeto ({score_total, detalles, ...}),
-    // no como número — renderizar el objeto directo crashea <Text>.
-    const compat = perfil?.compatibilidad?.score_total ?? Math.floor(Math.random() * 20 + 75);
+    // no como número — renderizar el objeto directo crashea <Text>. Si el
+    // backend no manda un score real, no se inventa uno: se oculta la barra.
+    const compat = perfil?.compatibilidad?.score_total ?? null;
     const intereses = (perfil?.profiles?.intereses || perfil?.intereses || []).slice(0, 3);
 
     return (
@@ -253,20 +254,22 @@ export default function HomeScreen({ navigation }) {
               </View>
             )}
 
-            {/* Barra de compatibilidad */}
-            <View style={styles.filaCompat}>
-              <View style={styles.compatLeft}>
-                <Ionicons name="heart" size={12} color={COLORES.primario} />
-                <Text style={styles.compatTexto}>{compat}% compatible</Text>
+            {/* Barra de compatibilidad — solo si el backend manda un score real */}
+            {compat !== null && (
+              <View style={styles.filaCompat}>
+                <View style={styles.compatLeft}>
+                  <Ionicons name="heart" size={12} color={COLORES.primario} />
+                  <Text style={styles.compatTexto}>{compat}% compatible</Text>
+                </View>
+                <View style={styles.barraFondo}>
+                  <LinearGradient
+                    colors={COLORES.gradPrimario}
+                    style={[styles.barraRelleno, { width: `${compat}%` }]}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  />
+                </View>
               </View>
-              <View style={styles.barraFondo}>
-                <LinearGradient
-                  colors={COLORES.gradPrimario}
-                  style={[styles.barraRelleno, { width: `${compat}%` }]}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                />
-              </View>
-            </View>
+            )}
           </View>
         </LinearGradient>
 

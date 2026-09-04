@@ -77,13 +77,14 @@ router.post('/forgot-password',
   }
 );
 
-// POST /api/auth/reset-password  (confirmar con token)
+// POST /api/auth/reset-password  (confirmar con código de 6 dígitos enviado por email)
 router.post('/reset-password',
-  body('token').notEmpty(),
+  body('email').isEmail().normalizeEmail(),
+  body('codigo').isLength({ min: 6, max: 6 }),
   body('newPassword').isLength({ min: 8 }),
   validate,
   async (req, res, next) => {
-    try { res.json(await confirmarReset(req.body.token, req.body.newPassword)); }
+    try { res.json(await confirmarReset(req.body.email, req.body.codigo, req.body.newPassword)); }
     catch (e) { next(e); }
   }
 );

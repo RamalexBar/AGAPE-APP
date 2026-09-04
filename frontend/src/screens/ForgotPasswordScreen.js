@@ -18,6 +18,7 @@ export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [cargando, setCargando] = useState(false);
   const [enviado, setEnviado] = useState(false);
+  const [emailEnviado, setEmailEnviado] = useState('');
   const insets = useSafeAreaInsets();
 
   const handleEnviar = async () => {
@@ -29,6 +30,7 @@ export default function ForgotPasswordScreen({ navigation }) {
     try {
       setCargando(true);
       await authAPI.forgotPassword(emailTrimmed);
+      setEmailEnviado(emailTrimmed);
       setEnviado(true);
     } catch (error) {
       const msg = error.response?.data?.error?.message
@@ -93,18 +95,22 @@ export default function ForgotPasswordScreen({ navigation }) {
               <Ionicons name="checkmark-circle-outline" size={64} color={COLORES.verde} style={{ marginBottom: 20 }} />
               <Text style={styles.titulo}>Revisa tu correo</Text>
               <Text style={styles.subtitulo}>
-                Si ese correo está registrado, te llegarán instrucciones para recuperar tu contraseña.
+                Si ese correo está registrado, te llegó un código de 6 dígitos para recuperar tu contraseña.
                 Revisa también la carpeta de spam.
               </Text>
 
               <TouchableOpacity
                 style={styles.btnEnviar}
-                onPress={() => navigation.goBack()}
+                onPress={() => navigation.navigate('RestablecerContrasena', { email: emailEnviado })}
                 activeOpacity={0.85}
               >
                 <LinearGradient colors={COLORES.gradPrimario} style={styles.btnEnviarGrad}>
-                  <Text style={styles.btnEnviarTexto}>Volver a iniciar sesión</Text>
+                  <Text style={styles.btnEnviarTexto}>Ya tengo mi código</Text>
                 </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 16 }}>
+                <Text style={styles.subtitulo}>Volver a iniciar sesión</Text>
               </TouchableOpacity>
             </>
           )}

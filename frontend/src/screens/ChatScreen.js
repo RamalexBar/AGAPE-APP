@@ -17,6 +17,9 @@ import { getSocket } from '../services/socketService';
 import { chatAPI } from '../services/api';
 import { COLORES, SOMBRAS } from '../utils/constants';
 import { tiempoRelativo, formatearHoraMensaje, obtenerIniciales, colorAvatar } from '../utils/helpers';
+import ReportButton from '../components/ReportButton';
+
+const MINUTOS_ACTIVO_RECIENTE = 5;
 
 export default function ChatScreen({ route, navigation }) {
   const { match } = route.params;
@@ -38,6 +41,17 @@ export default function ChatScreen({ route, navigation }) {
   const nombreOtro  = otroUsuario?.profiles?.nombre || otroUsuario?.nombre || 'Usuario';
   const iniciales   = obtenerIniciales(nombreOtro);
   const colorBase   = colorAvatar(nombreOtro);
+  const ultimaActividad = otroUsuario?.last_active_at;
+  const enLineaAhora = ultimaActividad
+    ? (Date.now() - new Date(ultimaActividad).getTime()) < MINUTOS_ACTIVO_RECIENTE * 60000
+    : false;
+  const textoEstado = otroEscribiendo
+    ? 'Escribiendo...'
+    : enLineaAhora
+      ? 'En línea'
+      : ultimaActividad
+        ? `Activo ${tiempoRelativo(ultimaActividad)}`
+        : '';
 
   const socket = getSocket();
 
@@ -175,13 +189,11 @@ export default function ChatScreen({ route, navigation }) {
             ? <Image source={{ uri: fotoOtro }} style={styles.avatarHeaderImg} contentFit="cover" />
             : <Text style={styles.avatarHeaderLetra}>{iniciales}</Text>
           }
-          <View style={styles.indicadorOnline} />
+          {enLineaAhora && <View style={styles.indicadorOnline} />}
         </View>
         <View>
           <Text style={styles.nombreHeader}>{nombreOtro}</Text>
-          <Text style={styles.estadoHeader}>
-            {otroEscribiendo ? 'Escribiendo...' : 'Activo hace poco'}
-          </Text>
+          {!!textoEstado && <Text style={styles.estadoHeader}>{textoEstado}</Text>}
         </View>
       </TouchableOpacity>
 
@@ -191,6 +203,12 @@ export default function ChatScreen({ route, navigation }) {
       >
         <Ionicons name="videocam-outline" size={24} color={COLORES.secundario} />
       </TouchableOpacity>
+
+      <ReportButton
+        userId={otroUsuario?.id}
+        userName={nombreOtro}
+        onBlock={() => navigation.goBack()}
+      />
     </View>
   );
 

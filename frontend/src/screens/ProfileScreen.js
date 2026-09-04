@@ -176,7 +176,7 @@ export default function ProfileScreen({ navigation, route }) {
 
         {/* Banner premium (si no es premium) */}
         {esPropioPerfl && !esPremium && (
-          <TouchableOpacity style={styles.bannerPremium}>
+          <TouchableOpacity style={styles.bannerPremium} onPress={() => navigation.navigate('Premium')} activeOpacity={0.85}>
             <LinearGradient colors={['#C44DFF', '#FF6B9D']} style={styles.bannerGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Ionicons name="star" size={22} color="#fff" />
               <View style={{ flex: 1, marginLeft: 12 }}>
@@ -191,7 +191,7 @@ export default function ProfileScreen({ navigation, route }) {
         {/* Opciones (solo perfil propio) */}
         {esPropioPerfl && (
           <View style={styles.opciones}>
-            <TouchableOpacity style={styles.opcionItem} onPress={() => navigation.navigate('Configuracion')}>
+            <TouchableOpacity style={styles.opcionItem} onPress={() => navigation.navigate('EditarPerfil')}>
               <Ionicons name="create-outline" size={22} color={COLORES.acento} />
               <Text style={styles.opcionTexto}>Editar perfil</Text>
               <Ionicons name="chevron-forward" size={18} color={COLORES.muted} />

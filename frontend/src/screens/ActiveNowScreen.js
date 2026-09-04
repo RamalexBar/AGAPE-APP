@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { activeAPI, matchAPI } from '../services/api';
 
@@ -24,6 +25,7 @@ export default function ActiveNowScreen({ navigation }) {
   const [cargando, setCargando] = useState(true);
   const [refrescando, setRefrescando] = useState(false);
   const [contador, setContador] = useState(0);
+  const [likeados, setLikeados] = useState({});
   const insets = useSafeAreaInsets();
 
   const cargar = useCallback(async () => {
@@ -46,12 +48,16 @@ export default function ActiveNowScreen({ navigation }) {
   }, []);
 
   const darLike = async (userId) => {
+    if (likeados[userId]) return;
+    setLikeados(prev => ({ ...prev, [userId]: true }));
     try {
       const { data } = await matchAPI.darLike(userId);
       if (data.es_match) {
         navigation.navigate('Main');
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      setLikeados(prev => { const copia = { ...prev }; delete copia[userId]; return copia; });
+    }
   };
 
   const renderActivo = ({ item }) => {
@@ -89,9 +95,12 @@ export default function ActiveNowScreen({ navigation }) {
           </View>
         </View>
 
-        <TouchableOpacity onPress={() => darLike(item.id)}>
-          <LinearGradient colors={['#FF6B9D', '#C44DFF']} style={styles.btnLike}>
-            <Text style={{ fontSize: 18 }}>♥</Text>
+        <TouchableOpacity onPress={() => darLike(item.id)} disabled={!!likeados[item.id]}>
+          <LinearGradient
+            colors={likeados[item.id] ? ['#555', '#333'] : ['#FF6B9D', '#C44DFF']}
+            style={styles.btnLike}
+          >
+            <Ionicons name={likeados[item.id] ? 'checkmark' : 'heart'} size={18} color="#fff" />
           </LinearGradient>
         </TouchableOpacity>
       </TouchableOpacity>
@@ -101,7 +110,10 @@ export default function ActiveNowScreen({ navigation }) {
   return (
     <View style={[styles.fondo, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <View>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.btnVolver}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
           <Text style={styles.titulo}>🔥 Activos ahora</Text>
           <Text style={styles.subtitulo}>{contador} personas conectadas</Text>
         </View>
@@ -141,7 +153,8 @@ export default function ActiveNowScreen({ navigation }) {
 const styles = StyleSheet.create({
   fondo: { flex: 1, backgroundColor: COLORES.fondo },
   centrado: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, paddingBottom: 12 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, paddingBottom: 12, gap: 10 },
+  btnVolver: { padding: 4 },
   titulo: { fontSize: 22, fontWeight: '700', color: '#fff' },
   subtitulo: { color: COLORES.muted, fontSize: 13, marginTop: 2 },
   puntoBig: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(74,222,128,0.15)', justifyContent: 'center', alignItems: 'center' },

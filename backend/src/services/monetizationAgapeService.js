@@ -242,7 +242,9 @@ const activarSuscripcion = async (userId, planId, { dias = 30, transactionId = n
     expires_at:     vencimiento.toISOString(),
     transaction_id: transactionId,
     plataforma,
-    precio_pagado:  dias >= 365 ? plan.precio_anual_cop : plan.precio_mensual_cop,
+    precio_pagado:  dias >= 365 ? plan.precio_anual_cop
+                   : dias >= 90  ? (plan.precio_trimestral_cop ?? plan.precio_mensual_cop)
+                   : plan.precio_mensual_cop,
   }).select().single();
 
   if (errorInsert || !nueva) {

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../services/api';
 import useStore from '../store/useStore';
@@ -108,6 +109,9 @@ export default function GamificationScreen({ navigation }) {
   return (
     <View style={[styles.fondo, { paddingTop: insets.top }]}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.btnVolver}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
         <Text style={styles.titulo}>🏆 Logros y ranking</Text>
       </View>
 
@@ -169,7 +173,8 @@ export default function GamificationScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   fondo: { flex: 1, backgroundColor: COLORES.fondo },
-  header: { padding: 20, paddingBottom: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 20, paddingBottom: 12 },
+  btnVolver: { padding: 4 },
   titulo: { fontSize: 22, fontWeight: '700', color: '#fff' },
   resumenCard: { marginHorizontal: 16, borderRadius: 16, padding: 16, flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
   resumenItem: { alignItems: 'center', gap: 4 },

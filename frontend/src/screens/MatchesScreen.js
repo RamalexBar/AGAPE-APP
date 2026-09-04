@@ -5,7 +5,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, RefreshControl,
+  ActivityIndicator, RefreshControl, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
@@ -44,6 +44,28 @@ export default function MatchesScreen({ navigation }) {
 
   useEffect(() => { cargar(); resetearNoLeidos(); }, []);
 
+  const deshacerMatch = (item, nombre) => {
+    Alert.alert(
+      `Deshacer match con ${nombre}`,
+      'Se eliminará la conversación y no podrán verse en el feed. Esta acción no se puede deshacer.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Deshacer match',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await matchAPI.eliminarMatch(item.match_id || item.id);
+              setMatches(prev => prev.filter(m => (m.match_id || m.id) !== (item.match_id || item.id)));
+            } catch {
+              Alert.alert('Error', 'No se pudo deshacer el match. Intenta de nuevo.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderMatch = ({ item }) => {
     const otro  = item.usuario;
     const foto  = otro?.profiles?.fotos?.[0] || otro?.avatar_url;
@@ -57,6 +79,7 @@ export default function MatchesScreen({ navigation }) {
       <TouchableOpacity
         style={styles.matchItem}
         onPress={() => navigation.navigate('Chat', { match: item, usuario: otro })}
+        onLongPress={() => deshacerMatch(item, nombre)}
         activeOpacity={0.75}
       >
         <View style={styles.avatarContenedor}>
@@ -125,7 +148,7 @@ export default function MatchesScreen({ navigation }) {
               {likesRecibidos > 0 && (
                 <TouchableOpacity
                   style={styles.likesCard}
-                  onPress={() => !esPremium && navigation.navigate('Premium')}
+                  onPress={() => navigation.navigate(esPremium ? 'QuienMeDioLike' : 'Premium')}
                   activeOpacity={0.9}
                 >
                   <LinearGradient
@@ -157,7 +180,7 @@ export default function MatchesScreen({ navigation }) {
               )}
 
               <Text style={styles.seccionTitulo}>
-                {matches.length > 0 ? `${matches.length} conversaciones` : ''}
+                {matches.length > 0 ? `${matches.length} conversaciones · mantén presionado para deshacer un match` : ''}
               </Text>
             </View>
           )}

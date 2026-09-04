@@ -1,10 +1,10 @@
 // ================================================
-// ÁGAPE — Rutas: Señalización de videollamadas
+// ÁGAPE — Rutas: Señalización + credenciales de videollamadas
 // /api/videocall/*
-// NOTA: no integra un SFU real (Agora/etc). Solo coordina
-// la señalización (quién llama, canal, aceptar/rechazar/colgar)
-// vía Socket.IO; el cliente cae a "modo demo" si no hay motor
-// de video instalado (ver frontend VideoCallScreen.js).
+// Coordina quién llama (canal, aceptar/rechazar/colgar) vía Socket.IO
+// y emite tokens RTC firmados de Agora para el video/audio real. Si
+// AGORA_APP_ID/AGORA_APP_CERTIFICATE no están configurados, devuelve
+// app_id/token nulos y el cliente cae a modo demo (ver VideoCallScreen.js).
 // ================================================
 const router = require('express').Router();
 const { body } = require('express-validator');
@@ -12,6 +12,7 @@ const { v4: uuidv4 } = require('uuid');
 const { validate } = require('../middlewares/validate');
 const { authenticateToken } = require('../middlewares/auth');
 const supabase = require('../config/supabase');
+const { generarCredenciales } = require('../services/agoraTokenService');
 
 async function obtenerOtroParticipante(matchId, userId) {
   const { data: conn } = await supabase
@@ -36,16 +37,17 @@ router.post('/iniciar', authenticateToken,
 
       const llamada_id = uuidv4();
       const canal = `call_${match_id}_${Date.now()}`;
+      const { app_id, token, uid } = generarCredenciales(canal);
 
       const { data: llamador } = await supabase.from('users').select('nombre').eq('id', req.user.id).single();
 
       if (global.io) {
         global.io.to('user_' + otroId).emit('videocall_incoming', {
-          llamada_id, match_id, canal, de: llamador?.nombre || 'Alguien',
+          llamada_id, match_id, canal, de: llamador?.nombre || 'Alguien', app_id, token,
         });
       }
 
-      res.json({ llamada_id, canal, app_id: null, token: null, uid: null });
+      res.json({ llamada_id, canal, app_id, token, uid });
     } catch (e) { next(e); }
   }
 );
@@ -67,7 +69,7 @@ router.post('/responder/:id', authenticateToken,
         });
       }
 
-      res.json({ llamada_id: req.params.id, accion, token: null, uid: null });
+      res.json({ llamada_id: req.params.id, accion });
     } catch (e) { next(e); }
   }
 );

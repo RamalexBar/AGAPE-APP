@@ -45,7 +45,7 @@ export const authAPI = {
   getMe:          ()                   => api.get('/api/auth/me'),
   logout:         ()                   => api.post('/api/auth/logout'),
   forgotPassword: (email)              => api.post('/api/auth/forgot-password', { email }),
-  resetPassword:  (token, newPassword) => api.post('/api/auth/reset-password', { token, newPassword }),
+  resetPassword:  (email, codigo, newPassword) => api.post('/api/auth/reset-password', { email, codigo, newPassword }),
   changePassword: (currentPassword, newPassword) =>
     api.put('/api/auth/password', { currentPassword, newPassword }),
   deleteAccount: () => api.delete('/api/profiles/me'),
@@ -63,6 +63,10 @@ export const profileAPI = {
     api.post('/api/reports', { reported_user_id: userId, razon, descripcion }),
   blockUser: (userId) =>
     api.post(`/api/reports/block/${userId}`),
+  unblockUser: (userId) =>
+    api.delete(`/api/reports/block/${userId}`),
+  getBlockedUsers: () =>
+    api.get('/api/reports/blocked'),
 };
 
 // ── MATCHES & SWIPE ───────────────────────────────────────

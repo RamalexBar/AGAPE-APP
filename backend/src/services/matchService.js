@@ -9,8 +9,8 @@ const getMatches = async (userId) => {
     .from('connections')
     .select(`
       id, connection_type, connected_at,
-      user1:user_id_1(id, nombre, avatar_url, is_verified),
-      user2:user_id_2(id, nombre, avatar_url, is_verified)
+      user1:user_id_1(id, nombre, avatar_url, is_verified, last_active_at),
+      user2:user_id_2(id, nombre, avatar_url, is_verified, last_active_at)
     `)
     .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
     .eq('status', 'connected')

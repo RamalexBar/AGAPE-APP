@@ -37,6 +37,11 @@ import GamificationScreen from '../screens/GamificationScreen';
 import DevocionalScreen  from '../screens/DevocionalScreen';
 import LegalScreen       from '../screens/LegalScreen';
 import PremiumScreen     from '../screens/PremiumScreen';
+import EditarPerfilScreen from '../screens/EditarPerfilScreen';
+import QuienMeDioLikeScreen from '../screens/QuienMeDioLikeScreen';
+import UsuariosBloqueadosScreen from '../screens/UsuariosBloqueadosScreen';
+import RestablecerContrasenaScreen from '../screens/RestablecerContrasenaScreen';
+import CambiarContrasenaScreen from '../screens/CambiarContrasenaScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -147,6 +152,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Login"    component={LoginScreen} />
             <Stack.Screen name="Registro" component={RegisterScreen} options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="OlvideContrasena" component={ForgotPasswordScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="RestablecerContrasena" component={RestablecerContrasenaScreen} options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="Legal"    component={LegalScreen} />
           </>
         ) : (
@@ -154,13 +160,17 @@ export default function AppNavigator() {
             <Stack.Screen name="Main"          component={MainTabs} />
             <Stack.Screen name="Chat"          component={ChatScreen}  options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="VerPerfil"     component={ProfileScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="EditarPerfil"  component={EditarPerfilScreen} options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="Configuracion" component={SettingsScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="UsuariosBloqueados" component={UsuariosBloqueadosScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="CambiarContrasena" component={CambiarContrasenaScreen} options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="ActivosAhora"  component={ActiveNowScreen} />
             <Stack.Screen name="Verificacion"  component={VerificationScreen} />
             <Stack.Screen name="Eventos"       component={EventsScreen} />
             <Stack.Screen name="Logros"        component={GamificationScreen} />
             <Stack.Screen name="Devocional"    component={DevocionalScreen} options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="Premium"       component={PremiumScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="QuienMeDioLike" component={QuienMeDioLikeScreen} options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="Legal"         component={LegalScreen} />
             <Stack.Screen name="Videollamada"  component={VideoCallScreen} options={{ presentation: 'fullScreenModal' }} />
           </>

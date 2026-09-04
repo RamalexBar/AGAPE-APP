@@ -47,6 +47,7 @@
     "react": "^19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.6",
+    "react-native-agora": "^4.6.4",
     "react-native-deck-swiper": "^2.0.17",
     "react-native-gesture-handler": "~2.30.0",
     "react-native-iap": "^12.16.4",
