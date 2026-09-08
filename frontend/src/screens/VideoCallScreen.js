@@ -19,24 +19,15 @@ import { requestCameraPermissionsAsync, requestMicrophonePermissionsAsync } from
 import api from '../services/api';
 import { getSocket } from '../services/socketService';
 import useStore from '../store/useStore';
+// agoraNative.js (nativo) / agoraNative.web.js (web) — Metro elige el
+// archivo según la plataforma, así react-native-agora nunca se referencia
+// al empaquetar para web (no es compatible y rompería el bundle entero).
+import { createAgoraRtcEngine, RtcSurfaceView, ChannelProfileType, ClientRoleType } from '../services/agoraNative';
 
 // Límites de tiempo
 const LIMITE_FREE    = 60;   // 1 minuto
 const LIMITE_PREMIUM = 300;  // 5 minutos
 const AVISO_ANTES    = 10;   // Avisar 10s antes
-
-// Importar Agora solo si está instalado y compilado con soporte nativo
-// (requiere un dev client / build de EAS — no funciona en Expo Go).
-let createAgoraRtcEngine, RtcSurfaceView, ChannelProfileType, ClientRoleType;
-try {
-  const agora = require('react-native-agora');
-  createAgoraRtcEngine = agora.createAgoraRtcEngine;
-  RtcSurfaceView = agora.RtcSurfaceView;
-  ChannelProfileType = agora.ChannelProfileType;
-  ClientRoleType = agora.ClientRoleType;
-} catch {
-  // Agora no instalado o no compilado nativamente — usar modo demo
-}
 
 const COLORES = {
   fondo: '#0a0a14', texto: '#fff',

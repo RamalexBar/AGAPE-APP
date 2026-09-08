@@ -71,24 +71,19 @@
             "targetSdkVersion": 36,
             "buildToolsVersion": "35.0.0",
             "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ],
       "expo-web-browser",
-      [
-        "react-native-iap",
-        {
-          "paymentProvider": "Play Store"
-        }
-      ]
+      "expo-iap"
     ],
     "extra": {
       "eas": {
-        "projectId": "572a7549-9e09-488f-97be-f4d8f5e4d63c"
+        "projectId": "695034ab-24fe-4685-96c2-031d556c8f19"
       }
     },
-    "owner": "ramalex"
+    "owner": "tatispipe05s-organization"
   }
 }
-
