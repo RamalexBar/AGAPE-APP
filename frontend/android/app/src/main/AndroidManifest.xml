@@ -9,6 +9,11 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" tools:replace="android:maxSdkVersion"/>
+  <!-- El SDK nativo de Agora (react-native-agora) declara este permiso para su
+       API opcional de compartir pantalla, que Ágape no usa (solo videollamada
+       de cámara/micrófono) — se excluye para no declarar una capacidad sin
+       funcionalidad visible correspondiente. -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" tools:node="remove"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
