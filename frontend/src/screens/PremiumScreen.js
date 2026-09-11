@@ -226,11 +226,11 @@ export default function PremiumScreen({ navigation }) {
             Puedes gestionar y cancelar tu suscripción en los ajustes de tu cuenta.
           </Text>
           <View style={styles.legalLinks}>
-            <TouchableOpacity onPress={() => Linking.openURL('https://agapeapp.co/terms')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Legal', { tipo: 'terminos' })}>
               <Text style={styles.legalLink}>Términos de uso</Text>
             </TouchableOpacity>
             <Text style={styles.legalSep}>·</Text>
-            <TouchableOpacity onPress={() => Linking.openURL('https://agapeapp.co/privacy')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Legal', { tipo: 'privacidad' })}>
               <Text style={styles.legalLink}>Privacidad</Text>
             </TouchableOpacity>
           </View>

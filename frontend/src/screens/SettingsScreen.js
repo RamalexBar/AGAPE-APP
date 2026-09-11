@@ -185,7 +185,7 @@ export default function SettingsScreen({ navigation }) {
           <Text style={styles.seccionTitulo}>Cuenta</Text>
           <View style={styles.seccionCard}>
             <Opcion icono="shield-checkmark-outline" titulo="Verificar identidad" subtitulo={user?.is_verified ? 'Perfil verificado ✓' : 'Agrega el sello de confianza'} color="#4ade80" onPress={() => navigation.navigate('Verificacion')} />
-            <Opcion icono="person-outline" titulo="Editar perfil" subtitulo="Fotos, bio e intereses" onPress={() => navigation.navigate('VerPerfil')} />
+            <Opcion icono="person-outline" titulo="Editar perfil" subtitulo="Fotos, bio e intereses" onPress={() => navigation.navigate('EditarPerfil')} />
             <Opcion icono="star-outline" titulo="Ágape Premium" subtitulo={user?.subscription_type === 'premium' ? 'Activo' : 'Sin límites ni anuncios'} color="#FFD700" onPress={() => navigation.navigate('Premium')} />
             <Opcion icono="wallet-outline" titulo="Mis monedas" subtitulo={`${user?.coins_balance || 0} monedas disponibles`} color="#FF9B6B" onPress={() => navigation.navigate('Logros')} />
           </View>
