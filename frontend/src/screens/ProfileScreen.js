@@ -163,8 +163,8 @@ export default function ProfileScreen({ navigation, route }) {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statNumero}>{esPremium ? '∞' : '1 min'}</Text>
-              <Text style={styles.statLabel}>Videollamada</Text>
+              <Text style={styles.statNumero}>{esPremium ? '✓' : '✗'}</Text>
+              <Text style={styles.statLabel}>Ver quién te dio like</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
@@ -181,7 +181,7 @@ export default function ProfileScreen({ navigation, route }) {
               <Ionicons name="star" size={22} color="#fff" />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={styles.bannerTitulo}>Hazte Premium</Text>
-                <Text style={styles.bannerSub}>Videollamadas de 5 min · Sin anuncios · Matches ilimitados</Text>
+                <Text style={styles.bannerSub}>Ver quién te dio like · Sin anuncios · Matches ilimitados</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#fff" />
             </LinearGradient>

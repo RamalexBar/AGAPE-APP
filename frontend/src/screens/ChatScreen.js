@@ -197,13 +197,6 @@ export default function ChatScreen({ route, navigation }) {
         </View>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.btnVideollamada}
-        onPress={() => navigation.navigate('Videollamada', { match, usuario: otroUsuario })}
-      >
-        <Ionicons name="videocam-outline" size={24} color={COLORES.secundario} />
-      </TouchableOpacity>
-
       <ReportButton
         userId={otroUsuario?.id}
         userName={nombreOtro}
