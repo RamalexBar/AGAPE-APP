@@ -1,10 +1,41 @@
-# ✝️ ÁGAPE v10 — App de Citas Cristiana
+# Ágape — App de citas cristiana
 
-**Versión 10 — Profesional, lista para producción**
+**App móvil de citas para personas cristianas o con valores, enfocada en relaciones reales.** Tiene perfiles verificados, match, chat en tiempo real, videollamada, devocional diario y plan Premium.
+
+👤 Autor: [Ramiro Alexander Barrios Torres](https://github.com/RamalexBar)
+
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
+![React Native](https://img.shields.io/badge/React_Native-Expo-000020?logo=expo&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?logo=express&logoColor=white)
+![Socket.io](https://img.shields.io/badge/Socket.io-010101?logo=socketdotio&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)
+
+<!-- Sugerencia: agrega aquí capturas del feed, el match y el chat -->
+
+## Qué hace
+
+- **Descubrir y hacer match:** feed de perfiles con swipe, sección "quién me dio like" y animación de match.
+- **Comunicación:** chat en tiempo real con Socket.io, con respaldo por REST si se cae la conexión, y videollamada.
+- **Comunidad:** devocional diario, eventos, gamificación y lista de usuarios activos en este momento.
+- **Seguridad:** verificación de perfil, reportes, bloqueo de usuarios y eliminación completa de la cuenta.
+- **Monetización:** plan Premium mensual, trimestral y anual, con restauración de compras.
+- **Lista para las tiendas:** cumple los requisitos de App Store y Google Play (privacidad, Data Safety y PrivacyInfo de iOS 17).
+
+## Retos técnicos resueltos
+
+- **Tiempo real confiable:** el chat se reconecta solo, con esperas crecientes (backoff), y usa REST como respaldo.
+- **Backend seguro:** middlewares de autenticación JWT, límite de peticiones (rate limiting) y cabeceras de seguridad.
+- **Estado y notificaciones:** estado global con Zustand y notificaciones push con canal Android y contador de mensajes no leídos.
 
 ---
 
-## Estructura del proyecto
+## Documentación técnica
+
+
+---
+
+### Estructura del proyecto
 
 ```
 agape-v10/
@@ -45,7 +76,7 @@ agape-v10/
 
 ---
 
-## Inicio rápido
+### Inicio rápido
 
 ```bash
 # Backend
@@ -63,7 +94,7 @@ npx expo start
 
 ---
 
-## Mejoras v10 vs v9
+### Mejoras v10 vs v9
 
 | Área | v9 | v10 |
 |------|----|-----|
@@ -88,7 +119,7 @@ npx expo start
 
 ---
 
-## Planes
+### Planes
 
 | Plan | Precio COP | USD | Beneficios |
 |------|-----------|-----|-----------|
@@ -99,7 +130,7 @@ npx expo start
 
 ---
 
-## Compliance App Store / Google Play
+### Compliance App Store / Google Play
 
 - ✅ Botón "Restaurar compras" (Apple 3.1.1)
 - ✅ Texto legal en paywall (Apple 3.1.2)
@@ -111,7 +142,7 @@ npx expo start
 
 ---
 
-## Variables de entorno requeridas
+### Variables de entorno requeridas
 
 Copia `backend/.env.example` a `backend/.env` y completa:
 
@@ -130,7 +161,7 @@ NODE_ENV=development
 
 ---
 
-## Deploy
+### Deploy
 
 **Backend (Railway / Render):**
 ```bash
